@@ -2,59 +2,116 @@
 <html lang="vi">
 
 <head>
-  <?php include './components/metadata.php'; ?>
-  <title>PREHUB - Luyện Thi TOEIC</title>
-  <link rel="stylesheet" href="../styles/style.css">
+	<?php include './components/metadata.php'; ?>
+	<title>Prephub - Luyện thi TOEIC online</title>
 </head>
-<style>
-  .nav-link.btn.btn-outline-light.ms-lg-3.px-4:hover:hover {
-    background-color: #14b8a6;
-    color: white;
-  }
-</style>
+
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-    <div class="container">
-      <a class="navbar-brand footer-logo fw-bold" href="./home.php">
-        <i class="bx bx-education" style="font-size: 31px;"></i>
-        <span>PREPHUB</span>
-      </a>
+	<?php include './components/homepage/navbar.php'; ?>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+	<?php include './components/homepage/hero.php'; ?>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a id="nav-home" class="nav-link" href="home.php">Trang chủ</a></li>
-          <li class="nav-item"><a id="nav-list" class="nav-link" href="home.php#book-list-section" onclick="handleNavClick(event)">Danh sách đề thi</a></li>
-          <li class="nav-item"><a id="nav-premium" class="nav-link" href="premium.php">Premium</a></li>
-          <li class="nav-item">
-            <a class="nav-link btn btn-outline-light ms-lg-3 px-4" href="login.php">
-              Đăng nhập <i class="fas fa-sign-in-alt ms-2"></i>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-  <!-- INCLUDE HEADER FILE -->
-  <?php include './components/header.php'; ?>
-  <main class="container mb-5">
+	<?php include './components/homepage/about.php'; ?>
 
-    <section id="book-list-section">
-      <h2 class="fw-bold mb-4">Banner quảng cáo</h2>
-      <div class="row row-cols-1 row-cols-lg-3 g-4" id="book-container"></div>
-    </section>
+	<?php include './components/homepage/tests.php'; ?>
 
-    
-  </main>
+	<?php include './components/homepage/pricing.php'; ?>
 
-  <!-- INCLUDE FOOTER FILE -->
-  <?php include './components/footer.php'; ?>
+	<?php include './components/homepage/feedback.php'; ?>
 
-  <script src="../js/main.js"></script>
+	<?php include './components/homepage/banner.php'; ?>
+
+	<?php include './components/homepage/footer.php'; ?>
+
+	<?php include './components/homepage/loginModal.php'; ?>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		// navbar scroll
+		const navbar = document.getElementById('mainNavbar');
+		window.addEventListener('scroll', () => {
+			navbar.classList.toggle('scrolled', window.scrollY > 50);
+		});
+
+		// dynamic nav indicator
+		const navIndicator = document.getElementById('navIndicator');
+		const navLinks = document.querySelectorAll('.nav-link');
+		const navCenter = document.querySelector('.nav-center');
+
+		function moveIndicator(element) {
+			const rect = element.getBoundingClientRect();
+			const parentRect = navCenter.getBoundingClientRect();
+			navIndicator.style.width = `${rect.width - 32}px`; // Adjust for padding
+			navIndicator.style.left = `${rect.left - parentRect.left + 16}px`;
+		}
+
+		function resetIndicator() {
+			const activeLink = document.querySelector('.nav-link.active');
+			if (activeLink) {
+				moveIndicator(activeLink);
+			} else {
+				navIndicator.style.width = '0';
+			}
+		}
+
+		navLinks.forEach(link => {
+			link.addEventListener('mouseenter', (e) => moveIndicator(e.target));
+		});
+
+		navCenter.addEventListener('mouseleave', resetIndicator);
+
+		// Initial position
+		window.addEventListener('load', resetIndicator);
+		window.addEventListener('resize', resetIndicator);
+
+		// pricing toggle
+		const priceToggle = document.getElementById('priceToggle');
+		const monthlyBtn = document.getElementById('monthlyBtn');
+		const yearlyBtn = document.getElementById('yearlyBtn');
+		let isYearly = false;
+
+		function updatePrices(yearly) {
+			isYearly = yearly;
+			priceToggle.classList.toggle('yearly', yearly);
+
+			monthlyBtn.classList.toggle('active', !yearly);
+			monthlyBtn.classList.toggle('inactive', yearly);
+			yearlyBtn.classList.toggle('active', yearly);
+			yearlyBtn.classList.toggle('inactive', !yearly);
+
+			document.querySelectorAll('.plan-price').forEach(el => {
+				const fullPrice = yearly ? el.dataset.yearly : el.dataset.monthly;
+				const parts = fullPrice.split('/');
+				if (parts.length === 2) {
+					el.innerHTML = `${parts[0]}<span class="price-suffix">/${parts[1]}</span>`;
+				} else {
+					el.textContent = fullPrice;
+				}
+			});
+		}
+
+		priceToggle.addEventListener('click', () => updatePrices(!isYearly));
+		monthlyBtn.addEventListener('click', () => updatePrices(false));
+		yearlyBtn.addEventListener('click', () => updatePrices(true));
+
+		// login modal
+		const loginForm = document.getElementById('loginForm');
+		const loginBtn = document.getElementById('loginBtn');
+		const userAvatar = document.getElementById('userAvatar');
+		const loginModalEl = document.getElementById('loginModal');
+
+		if (loginModalEl) {
+			const loginModal = new bootstrap.Modal(loginModalEl);
+
+			loginForm.addEventListener('submit', e => {
+				e.preventDefault();
+				loginModal.hide();
+				if (loginBtn) loginBtn.classList.add('d-none');
+				if (userAvatar) userAvatar.classList.remove('d-none');
+			});
+		}
+	</script>
 </body>
 
 </html>
