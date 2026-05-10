@@ -152,13 +152,14 @@ function showSuccess($msg) {
 			document.querySelectorAll('.eye-toggle').forEach(btn => {
 				btn.addEventListener('click', function() {
 					const input = this.previousElementSibling;
+					const iconImg = this.querySelector('img');
 					const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
 					input.setAttribute('type', type);
-					const icon = this.querySelector('i');
+					
 					if (type === 'text') {
-						icon.classList.replace('bx-hide', 'bx-show');
+						iconImg.src = '../img/eye_open.png';
 					} else {
-						icon.classList.replace('bx-show', 'bx-hide');
+						iconImg.src = '../img/eye_close.png';
 					}
 				});
 			});
