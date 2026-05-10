@@ -1,3 +1,11 @@
+.footer {
+  background-color: var(--primary);
+  color: white;
+  padding: 100px 0 60px;
+}
+
+.footer-top {
+  display: flex;
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 60px;
@@ -121,3 +129,7 @@
   text-align: left;
 }
 
+.footer-bottom p {
+  font-size: 0.9rem;
+  opacity: 0.5;
+}

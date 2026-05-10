@@ -26,7 +26,9 @@
                                     <label>Mật khẩu</label>
                                     <div class="input-wrapper relative">
                                         <input type="password" name="password" placeholder="••••••••" required>
-                                        <button type="button" class="eye-toggle"><i class='bx bx-hide'></i></button>
+                                        <button type="button" class="eye-toggle">
+                                            <img src="../img/eye_close.png" alt="view" class="eye-icon">
+                                        </button>
                                     </div>
                                 </div>
 
@@ -101,8 +103,10 @@
                                 <div class="input-group-glass">
                                     <label>Mật khẩu</label>
                                     <div class="input-wrapper relative">
-                                        <input type="password" name="password" id="signupPass" placeholder="••••••••" required>
-                                        <button type="button" class="eye-toggle"><i class='bx bx-hide'></i></button>
+                                        <input type="password" name="password" id="password" placeholder="••••••••" required>
+                                        <button type="button" class="eye-toggle">
+                                            <img src="../img/eye_close.png" alt="view" class="eye-icon">
+                                        </button>
                                     </div>
                                 </div>
 
