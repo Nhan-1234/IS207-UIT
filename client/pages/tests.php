@@ -2,8 +2,7 @@
 session_start();
 //Kiểm tra xem user có đăng nhập hay chưa
 //Tránh việc lên URL gõ tests.php là ra trang này
-require_once '../../server/middleware/auth.php'; 
-requireAuth();
+
 ?>
 
 <!DOCTYPE html>
