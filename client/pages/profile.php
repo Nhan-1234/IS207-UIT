@@ -1,8 +1,7 @@
 <?php
 session_start();
 
-//require_once '../../server/middleware/auth.php';
-//requireAuth();
+
 
 $firstName = $_SESSION['first_name'] ?? 'Người';
 $lastName = $_SESSION['last_name'] ?? 'dùng';
