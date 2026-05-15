@@ -17,6 +17,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <!-- boxicons -->
+<link rel="preload" href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.woff2" as="font" type="font/woff2" crossorigin>
+
 <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
 <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
@@ -24,3 +28,4 @@
 <!-- font family -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles/homepage/main.css">
+<link rel="stylesheet" href="../styles/profile-dropdown.css">
