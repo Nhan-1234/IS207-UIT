@@ -1,0 +1,270 @@
+/* client/styles/tos.css */
+
+:root {
+  --bg-color: #fafafa;
+  --text-main: #05102b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --toc-bg: #f8fafc;
+  --accent: #1d4ed8;
+  --font-family: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color) !important;
+  font-family: var(--font-family);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==================== LAYOUT ==================== */
+.tos-page {
+  padding-top: 120px;
+  min-height: 100vh;
+}
+
+.tos-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .tos-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .tos-sidebar {
+    display: none;
+  }
+}
+
+/* ==================== SIDEBAR ==================== */
+.tos-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-links li {
+  margin-bottom: 12px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: block;
+  padding: 4px 0;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.tos-content {
+  max-width: 700px;
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.last-updated {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 40px;
+}
+
+/* ==================== TOC BOX ==================== */
+.toc-box {
+  background-color: var(--toc-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+
+.toc-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  user-select: none;
+}
+
+.toc-header:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.toc-body {
+  padding: 0 20px 20px;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-list li {
+  margin-bottom: 10px;
+}
+
+.toc-list li:last-child {
+  margin-bottom: 0;
+}
+
+.toc-list a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+/* ==================== CONTENT TEXT ==================== */
+.tos-body-text h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 48px 0 20px;
+  letter-spacing: -0.02em;
+}
+
+.tos-body-text h2:first-child {
+  margin-top: 0;
+}
+
+.tos-body-text p {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: #1e293b;
+  margin: 0 0 20px;
+}
+
+.tos-body-text ul, .tos-body-text ol {
+  padding-left: 24px;
+  margin: 0 0 24px;
+  color: #1e293b;
+  line-height: 1.75;
+}
+
+.tos-body-text li {
+  margin-bottom: 12px;
+}
+
+.tos-body-text table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tos-body-text th, .tos-body-text td {
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tos-body-text th {
+  background-color: #f1f5f9;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.tos-body-text dt {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 24px;
+}
+
+.tos-body-text dd {
+  margin-left: 0;
+  margin-bottom: 12px;
+  color: #1e293b;
+}
+
+/* ==================== NAVBAR ==================== */
+.navbar {
+  background-color: transparent !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+  padding: 24px 0 !important;
+}
+
+/* NAVBAR DEFAULT (Top) - Dark text because page is light */
+.navbar:not(.scrolled) .brand-text,
+.navbar:not(.scrolled) .brand-subtext,
+.navbar:not(.scrolled) .nav-link {
+  color: #05102b !important;
+}
+
+.navbar:not(.scrolled) .nav-indicator {
+  background-color: #05102b !important;
+  height: 2px !important;
+  bottom: 0 !important;
+}
+
+.navbar:not(.scrolled) .navbar-brand svg path {
+  fill: #05102b !important;
+}
+
+.navbar:not(.scrolled) .btn-login {
+  background-color: #05102b !important;
+  color: white !important;
+}
+
+/* NAVBAR SCROLLED (Dark Blue) */
+.navbar.scrolled {
+  background-color: #05102b !important;
+  padding: 12px 0 !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.navbar.scrolled .nav-indicator {
+  background-color: white !important;
+  bottom: 0 !important;
+}
+
+.navbar.scrolled .brand-text,
+.navbar.scrolled .brand-subtext,
+.navbar.scrolled .nav-link {
+  color: white !important;
+}
+
+.navbar.scrolled .navbar-brand svg path {
+  fill: white !important;
+}
+
+.navbar.scrolled .btn-login {
+  background-color: white !important;
+  color: #05102b !important;
+}
