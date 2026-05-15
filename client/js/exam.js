@@ -29,7 +29,7 @@ async function fetchExamData() {
         
         if (response.status === 403) {
             alert("Đề thi này dành riêng cho tài khoản đã mua!");
-            window.location.href = "premium.php"; 
+            window.location.href = "pricing.php"; 
             return;
         }
 

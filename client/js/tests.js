@@ -65,7 +65,7 @@ async function load_tests() {
                 // LOGIC QUAN TRỌNG: Kiểm tra nếu đã mở khóa thì hiện "Làm bài", nếu chưa thì hiện "Đăng ký"
                 const actionButton = test.is_unlocked 
                     ? `<a href="./exam.php?uuid=${test.uuid}" class="btn-start">Làm bài ✦</a>`
-                    : `<a href="./premium.php" class="btn-start btn-lock"><i class="fas fa-lock"></i> Mua ngay</a>`;
+                    : `<a href="./pricing.php" class="btn-start btn-lock"><i class="fas fa-lock"></i> Mua ngay</a>`;
 
                 grid_premium.innerHTML += `
                     <div class="test-card premium">

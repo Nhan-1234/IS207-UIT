@@ -16,7 +16,7 @@
 							<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="user">
 							<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Midnight" alt="user">
 						</div>
-						<span class="trust-text">1000+ thí sinh tin dùng...</span>
+						<span class="trust-text">15000+ thí sinh tin dùng...</span>
 					</div>
 				</div>
 			</div>
