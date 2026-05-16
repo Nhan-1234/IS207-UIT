@@ -52,7 +52,7 @@ $total_number_of_tests = getNumTestDone();
 
 <body>
     <!-- GIỮ NGUYÊN NAVBAR -->
-    <?php include './components/navBar.php'; ?>
+    <?php include './components/navbar.php'; ?>
 
     <div class="page">
         <!-- Thông báo nếu chuyển tên đã thành công hay chưa -->
@@ -86,7 +86,7 @@ $total_number_of_tests = getNumTestDone();
                         Làm bài ngay
                     </a>
 
-                    <a href="premium.php" class="hero-btn secondary-btn">
+                    <a href="pricing.php" class="hero-btn secondary-btn">
                         <i class="fas fa-crown"></i>
                         Nâng cấp Premium
                     </a>
@@ -172,7 +172,7 @@ $total_number_of_tests = getNumTestDone();
                         <p>Truy cập thêm nhiều bộ đề TOEIC chất lượng cao và theo dõi tiến độ chi tiết hơn.</p>
                     </div>
 
-                    <a href="premium.php" class="premium-link">
+                    <a href="pricing.php" class="premium-link">
                         Xem gói Premium
                         <i class="fas fa-arrow-right"></i>
                     </a>

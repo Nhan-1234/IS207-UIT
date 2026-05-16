@@ -67,7 +67,7 @@ function anchorId($index)
 
 <body>
 
-	<?php $navbarMode = 'light'; $scrollThreshold = 20; include './components/homepage/navbar.php'; ?>
+	<?php $navbarMode = 'light'; $scrollThreshold = 20; include './components/navbar.php'; ?>
 
 	<main class="tos-page">
 		<div class="tos-container">
@@ -547,7 +547,7 @@ function anchorId($index)
 		</div>
 	</main>
 
-	<?php include './components/homepage/footer.php'; ?>
+	<?php include './components/footer.php'; ?>
 
 	<script>
 		// --- TOC COLLAPSE LOGIC ---

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../styles/results.css">
 </head>
 <body class="bg-light">
-<?php include './components/navBar.php'; ?>
+<?php include './components/navbar.php'; ?>
 
 <div class="container-fluid py-4 mt-5">
     <div class="row g-3 mb-4">

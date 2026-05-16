@@ -36,7 +36,7 @@ function showSuccess($msg)
 
 <body>
 
-	<?php $navbarMode = 'dark'; include './components/homepage/navbar.php'; ?>
+	<?php $navbarMode = 'dark'; include './components/navbar.php'; ?>
 
 	<?php include './components/homepage/hero.php'; ?>
 
@@ -50,7 +50,7 @@ function showSuccess($msg)
 
 	<?php include './components/homepage/banner.php'; ?>
 
-	<?php include './components/homepage/footer.php'; ?>
+	<?php include './components/footer.php'; ?>
 
 	<?php include './components/homepage/loginModal.php'; ?>
 

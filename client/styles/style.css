@@ -8,20 +8,6 @@ body {
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.navbar {
-	background-color: var(--primary-color);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.nav-link {
-	color: rgba(255, 255, 255, 0.6);
-}
-
-.nav-link.active {
-	color: #fff !important;
-	font-weight: bold;
-}
-
 .hero-section {
 	background: linear-gradient(135deg, #2c3e50, #3498db);
 	color: white;

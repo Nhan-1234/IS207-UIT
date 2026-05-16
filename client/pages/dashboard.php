@@ -14,7 +14,7 @@ homeRedirect();
 
 <body>
     <!-- GIỮ NAVBAR -->
-    <?php include './components/navBar.php'; ?>
+    <?php include './components/navbar.php'; ?>
 
     <div class="page">
 
@@ -161,7 +161,7 @@ homeRedirect();
 
                     <div class="tip-item">
                         <span>03</span>
-                        <p>Đặt mục tiêu tăng 20–30 điểm sau mỗi 3 bài luyện tập.</p>
+                        <p>Đặt mục tiêu tăng 20-30 điểm sau mỗi 3 bài luyện tập.</p>
                     </div>
                 </div>
             </aside>
