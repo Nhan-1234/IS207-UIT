@@ -208,8 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		function moveIndicator(element) {
 			var rect = element.getBoundingClientRect();
 			var parentRect = navCenter.getBoundingClientRect();
-			navIndicator.style.width = (rect.width - 32) + 'px';
-			navIndicator.style.left = (rect.left - parentRect.left + 16) + 'px';
+			navIndicator.style.width = (rect.width - 24) + 'px';
+			navIndicator.style.left = (rect.left - parentRect.left + 12) + 'px';
 		}
 
 		function resetIndicator() {
