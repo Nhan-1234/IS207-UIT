@@ -30,8 +30,8 @@ $scrollThreshold = $scrollThreshold ?? 50;
 			<ul class="navbar-nav nav-center">
 				<li class="nav-item"><a class="nav-link active" href="home.php">Trang chủ</a></li>
 				<li class="nav-item"><a class="nav-link" href="exam.php">Đề thi</a></li>
-				<li class="nav-item"><a class="nav-link" href="#about">Giới thiệu</a></li>
-				<li class="nav-item"><a class="nav-link" href="#pricing">Nâng cấp</a></li>
+				<li class="nav-item"><a class="nav-link" href="tos.php?tab=gioi-thieu">Giới thiệu</a></li>
+				<li class="nav-item"><a class="nav-link" href="pricing.php">Nâng cấp</a></li>
 				<div class="nav-indicator" id="navIndicator"></div>
 			</ul>
 			<!-- login: locked right -->
