@@ -1,4 +1,5 @@
 <?php
+session_start();
 // tos.php - Trang điều khoản & chính sách Prephub
 $sections = [
 	'gioi-thieu' => 'Giới thiệu',

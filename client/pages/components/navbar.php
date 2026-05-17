@@ -4,6 +4,13 @@
 $navbarMode = $navbarMode ?? 'dark';
 $scrollThreshold = $scrollThreshold ?? 50;
 
+$currentPage = basename($_SERVER['PHP_SELF']);
+$currentTab = $_GET['tab'] ?? '';
+
+$isHome = ($currentPage === 'home.php');
+$isExam = ($currentPage === 'exam.php' || $currentPage === 'tests.php' || $currentPage === 'attempts.php');
+$isIntro = ($currentPage === 'tos.php' && $currentTab === 'gioi-thieu');
+$isPricing = ($currentPage === 'pricing.php' || $currentPage === 'billing.php');
 ?>
 
 
@@ -29,11 +36,11 @@ $scrollThreshold = $scrollThreshold ?? 50;
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<!-- links: centered -->
 			<ul class="navbar-nav nav-center">
-				<li class="nav-item"><a class="nav-link active" href="home.php">Trang chủ</a></li>
-				<li class="nav-item"><a class="nav-link" href="exam.php">Đề thi</a></li>
-				<li class="nav-item"><a class="nav-link" href="tos.php?tab=gioi-thieu">Giới thiệu</a></li>
-				<li class="nav-item"><a class="nav-link" href="pricing.php">Nâng cấp</a></li>
-				<div class="nav-indicator" id="navIndicator"></div>
+				<li class="nav-item"><a class="nav-link<?= $isHome ? ' active' : '' ?>" href="home.php">Trang chủ</a></li>
+				<li class="nav-item"><a class="nav-link<?= $isExam ? ' active' : '' ?>" href="exam.php">Đề thi</a></li>
+				<li class="nav-item"><a class="nav-link<?= $isIntro ? ' active' : '' ?>" href="tos.php?tab=gioi-thieu">Giới thiệu</a></li>
+				<li class="nav-item"><a class="nav-link<?= $isPricing ? ' active' : '' ?>" href="pricing.php">Nâng cấp</a></li>
+				<div class="nav-indicator" id="navIndicator" style="opacity: 0;"></div>
 			</ul>
 			<!-- login: locked right -->
 			<ul class="navbar-nav nav-right">
@@ -66,6 +73,7 @@ $scrollThreshold = $scrollThreshold ?? 50;
 			function moveIndicator(element) {
 				var rect = element.getBoundingClientRect();
 				var parentRect = navCenter.getBoundingClientRect();
+				navIndicator.style.opacity = '1';
 				navIndicator.style.width = (rect.width - 24) + 'px';
 				navIndicator.style.left = (rect.left - parentRect.left + 12) + 'px';
 			}
@@ -76,6 +84,7 @@ $scrollThreshold = $scrollThreshold ?? 50;
 					moveIndicator(activeLink);
 				} else {
 					navIndicator.style.width = '0';
+					navIndicator.style.opacity = '0';
 				}
 			}
 

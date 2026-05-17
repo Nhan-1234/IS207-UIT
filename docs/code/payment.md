@@ -1,8 +1,8 @@
-### 1. Bảng giá "Chim mồi" (Growth Hacking Pricing):
-Thiết kế theo triết lý lùa giá ảo vào giao diện chính, nhưng khi thanh toán sẽ thu tiền tổng bằng thuộc tính `data-total` (Đảm bảo chốt sale dễ dàng nhưng không vi phạm pháp luật). Dòng chữ "Thanh toán 1 lần" đã được loại bỏ hoàn toàn khỏi UI để tăng độ "chim mồi", user chỉ nhận ra khi mở Modal thanh toán.
+### 1. Bảng giá "Chim mồi"
+Giá trên UI vẫn chính xác, chỉ là nó tính theo tháng để nhìn trông rẻ hơn thôi, khi thanh toán sẽ thu tiền tổng bằng thuộc tính `data-total`.
 
 *   **KHOÁ HỌC (Mua lẻ):**
-    *   Giá gốc giả (Gạch đi): `350.000đ`
+    *   Giá gốc (Gạch đi): `350.000đ`
     *   Giá thu thật / UI hiển thị: **`249.000đ / vĩnh viễn`**.
 
 *   **PREMIUM:**
@@ -21,7 +21,7 @@ Thiết kế theo triết lý lùa giá ảo vào giao diện chính, nhưng khi
 
 ---
 
-### 2. Logic Nghiệp vụ Nâng cấp (Upgrade Logic):
+### 2. Logic nghiệp vụ:
 Hệ thống tự động nhận diện gói hiện tại của user để trừ đi số tiền tương ứng họ ĐÃ THANH TOÁN (Trừ cứng theo đúng giá trị cấu hình, không trừ lố).
 
 *   **Kịch bản 1: Đang là Premium (Tháng/Năm) -> Mua Trọn Bộ (Tháng)**
@@ -40,8 +40,8 @@ Hệ thống tự động nhận diện gói hiện tại của user để trừ
 
 ---
 
-### 3. Kịch bản Test QA chi tiết (Luồng Nâng cấp Liên hoàn):
-Dưới đây là kịch bản test để verify (xác thực) logic cộng dồn giá và block mua trùng lặp trong một vòng đời User (User Journey) phức tạp nhất.
+### 3. Kịch bản Test QA chi tiết:
+Dưới đây là kịch bản test để verify logic cộng dồn giá và block mua trùng lặp trong một vòng đời User (User Journey) phức tạp nhất.
 
 **Chuẩn bị:** 
 - Tài khoản mới tinh (Free). 
