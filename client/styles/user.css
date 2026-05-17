@@ -540,7 +540,7 @@ body {
 @media (max-width: 992px) {
     .greeting-hero {
         grid-template-columns: 1fr;
-        padding: 32px;
+        padding: 100px 32px 32px;
         text-align: center;
     }
     .greet-name {
@@ -749,31 +749,4 @@ body {
 	}
 }
 
-/* FORCED LIGHT GLASSMORPHIC NAVBAR */
-.navbar {
-	background-color: rgba(255, 255, 255, 0.92) !important;
-	backdrop-filter: blur(12px) !important;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
-}
 
-.navbar .nav-link {
-	color: #05102b !important;
-}
-
-.navbar .brand-text {
-	color: #05102b !important;
-}
-
-.navbar .brand-subtext {
-	color: #64748b !important;
-}
-
-.navbar-brand svg path {
-	fill: #05102b !important;
-}
-
-.navbar .btn-login {
-	background-color: #05102b !important;
-	color: white !important;
-}
