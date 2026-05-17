@@ -81,7 +81,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 			<div class="stat-card"
 				style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; display:flex; align-items:center; gap:20px;">
 				<div
-					style="width:56px; height:56px; border-radius:12px; background:#e0f2fe; color:#0284c7; font-size:24px; display:flex; align-items:center; justify-content:center;">
+					style="width:46px; height:46px; border-radius:50%; border:1.5px solid rgba(2, 132, 199, 0.16); color:#0284c7; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
 					<i class="fas fa-trophy"></i>
 				</div>
 				<div>
@@ -95,7 +95,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 			<div class="stat-card"
 				style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; display:flex; align-items:center; gap:20px;">
 				<div
-					style="width:56px; height:56px; border-radius:12px; background:#e1f5ee; color:#1d9e75; font-size:24px; display:flex; align-items:center; justify-content:center;">
+					style="width:46px; height:46px; border-radius:50%; border:1.5px solid rgba(29, 158, 117, 0.16); color:#1d9e75; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
 					<i class="fas fa-file-circle-check"></i>
 				</div>
 				<div>
@@ -109,7 +109,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 			<div class="stat-card"
 				style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; display:flex; align-items:center; gap:20px;">
 				<div
-					style="width:56px; height:56px; border-radius:12px; background:#ffedd5; color:#c2410c; font-size:24px; display:flex; align-items:center; justify-content:center;">
+					style="width:46px; height:46px; border-radius:50%; border:1.5px solid rgba(245, 158, 11, 0.2); color:#f59e0b; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
 					<i class="fas fa-chart-line"></i>
 				</div>
 				<div>
@@ -125,15 +125,12 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 		<!-- chart + tips -->
 		<section style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px;">
 			<div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px;">
-				<div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
-					<div
-						style="width:48px; height:48px; border-radius:12px; background:#f1f5f9; color:#05102b; display:flex; align-items:center; justify-content:center; font-size:20px;">
-						<i class="fas fa-chart-line"></i>
-					</div>
-					<div>
-						<h2 style="font-size:18px; font-weight:700; color:#05102b; margin:0 0 4px;">Tiến độ điểm số</h2>
-						<p style="font-size:13px; color:#64748b; margin:0;">Dữ liệu các lần thi gần đây</p>
-					</div>
+				<div style="margin-bottom:24px;">
+					<h2 style="font-size:16px; font-weight:700; color:#05102b; margin:0 0 4px; display:flex; align-items:center; gap:8px;">
+						<i class="fas fa-chart-line" style="color:#0284c7; font-size:15px;"></i>
+						Tiến độ điểm số
+					</h2>
+					<p style="font-size:12px; color:#64748b; margin:0; padding-left:23px;">Dữ liệu các lần thi gần đây</p>
 				</div>
 				<div style="height:280px;"><canvas id="scoreChart"></canvas></div>
 			</div>
@@ -169,15 +166,12 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 		<section style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden;">
 			<div
 				style="padding:24px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
-				<div style="display:flex; gap:16px; align-items:center;">
-					<div
-						style="width:40px; height:40px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:16px;">
-						<i class="fas fa-clock-rotate-left"></i>
-					</div>
-					<div>
-						<h2 style="font-size:16px; font-weight:700; color:#05102b; margin:0 0 4px;">Lịch sử làm bài</h2>
-						<p style="font-size:12px; color:#64748b; margin:0;">Kết quả các bài thi gần đây</p>
-					</div>
+				<div>
+					<h2 style="font-size:16px; font-weight:700; color:#05102b; margin:0 0 4px; display:flex; align-items:center; gap:8px;">
+						<i class="fas fa-history" style="color:#0284c7; font-size:15px;"></i>
+						Lịch sử làm bài
+					</h2>
+					<p style="font-size:12px; color:#64748b; margin:0; padding-left:23px;">Kết quả các bài thi gần đây</p>
 				</div>
 				<a href="attempts.php"
 					style="font-size:13px; font-weight:600; color:#1d9e75; text-decoration:none; display:inline-flex; align-items:center; gap:2px;">Xem
@@ -338,6 +332,10 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 			}
 		});
 	</script>
+	
+	<!-- khối widget nâng cấp nổi ở góc màn hình -->
+	<?php include './components/pro-card.php'; ?>
+	<?php include './components/pro-card-script.php'; ?>
 </body>
 
 </html>

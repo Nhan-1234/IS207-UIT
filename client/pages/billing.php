@@ -15,22 +15,22 @@ $premiumUntil = $_SESSION['premium_until'] ?? null;
 $lastPayment = $_SESSION['last_payment'] ?? null;
 $history = array_reverse($_SESSION['payment_history'] ?? []);
 
-// migrate old sessions that have is_premium but no plan detail
+// nâng cấp session cũ có is_premium nhưng chưa có thông tin gói
 if ($isPremium && empty($planId)) {
 	$plans = require '../../server/config/premiumPlan.php';
-	$planId = 'pro'; // sensible default for legacy sessions
+	$planId = 'pro'; // mặc định gói pro cho các session cũ
 	$plan = $plans[$planId];
 	$planName = $plan['name'];
 	$planPrice = $plan['price'];
 	$planPeriod = $plan['period'];
-	// persist back so this only runs once
+	// lưu lại session để chỉ chạy một lần
 	$_SESSION['premium_plan'] = $planId;
 	$_SESSION['premium_name'] = $planName;
 	$_SESSION['premium_price'] = $planPrice;
 	$_SESSION['premium_period'] = $planPeriod;
 }
 
-// safe display fallbacks
+// fallback an toàn hiển thị
 $planName = $planName ?? 'Free';
 $planId = $planId ?? 'free';
 $planPrice = $planPrice ?? 0;
@@ -63,7 +63,7 @@ if ($premiumUntil) {
 
 	<div class="billing-page">
 
-		<!-- SUCCESS MODAL -->
+		<!-- modal đặt hàng thành công -->
 		<?php if ($showSuccess && $lastPayment): ?>
 			<div class="pmo-overlay pmo-active" id="successOverlay">
 				<div class="pmo-shell">
@@ -128,7 +128,7 @@ if ($premiumUntil) {
 			</div>
 		<?php endif; ?>
 
-		<!-- CURRENT PLAN CARD -->
+		<!-- thẻ thông tin gói dịch vụ hiện tại -->
 		<div class="billing-section">
 			<h1 class="billing-page-title">Gói dịch vụ</h1>
 
@@ -172,7 +172,7 @@ if ($premiumUntil) {
 			<?php endif; ?>
 		</div>
 
-		<!-- PAYMENT HISTORY -->
+		<!-- bảng lịch sử thanh toán -->
 		<div class="billing-section">
 			<h2 class="billing-section-title">Lịch sử thanh toán</h2>
 			<?php if (empty($history)): ?>
@@ -224,7 +224,7 @@ if ($premiumUntil) {
 
 	</div>
 
-	<!-- REFUND CONFIRM MODAL -->
+	<!-- modal xác nhận hủy và hoàn tiền -->
 	<div class="refund-overlay" id="refundOverlay">
 		<div class="refund-modal">
 			<h3 class="rfm-title">Xác nhận hủy gói</h3>
@@ -292,7 +292,7 @@ if ($premiumUntil) {
 			document.body.style.overflow = '';
 		}
 
-		// clear ?upgrade=success from URL so refresh doesn't re-show banner
+		// xóa tham số thành công trên url để khi f5 không bị hiện lại banner
 		if (location.search.includes('upgrade=success')) {
 			history.replaceState(null, '', location.pathname);
 		}
