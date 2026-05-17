@@ -249,6 +249,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
                                         position: 'top',
                                         labels: {
                                             boxWidth: 5,
+                                            boxHeight: 5,
                                             usePointStyle: true,
                                             pointStyle: 'circle',
                                             padding: 20,
