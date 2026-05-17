@@ -151,7 +151,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
                         <p style="font-size:12px; color:#64748b; margin:0;">Kết quả các bài thi gần đây</p>
                     </div>
                 </div>
-                <a href="attempts.php" style="font-size:13px; font-weight:600; color:#1d9e75; text-decoration:none;">Xem tất cả →</a>
+                <a href="attempts.php" style="font-size:13px; font-weight:600; color:#1d9e75; text-decoration:none; display:inline-flex; align-items:center; gap:2px;">Xem tất cả <i class='bx bx-chevron-right' style='font-size:16px;'></i></a>
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%; border-collapse:collapse; text-align:left;">

@@ -106,7 +106,7 @@ $premiumUntil = $_SESSION['premium_until'] ?? null;
 	<div class="dash-recent">
 		<div class="dash-section-head">
 			<span class="dash-section-title">Bài làm gần đây</span>
-			<a href="attempts.php" class="dash-see-all">Xem tất cả →</a>
+			<a href="attempts.php" class="dash-see-all">Xem tất cả <i class='bx bx-chevron-right'></i></a>
 		</div>
 		<div class="dash-recent-list" id="dash-recent-list">
 			<!-- skeleton placeholders -->
