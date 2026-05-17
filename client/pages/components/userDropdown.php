@@ -6,16 +6,18 @@ $userDropdownData = [
 ];
 
 $menuItems = [
-    ['label' => 'Hồ sơ', 'icon' => 'bx-user-circle', 'href' => 'profile.php'],
-    ['label' => 'Thông báo', 'icon' => 'bx-bell', 'href' => '#'],
-    ['label' => 'Đề thi', 'icon' => 'bx-edit', 'href' => 'tests.php'],
-    ['label' => 'Nâng cấp', 'icon' => 'bxf bx-star', 'href' => 'pricing.php', 'badge' => 'PRO', 'highlight' => true],
+    ['label' => 'Hồ sơ',    'icon' => 'bx-user-circle', 'href' => 'user.php'],
+    ['label' => 'Hoá đơn',   'icon' => 'bx-receipt',     'href' => 'billing.php'],
+    ['label' => 'Thông báo', 'icon' => 'bx-bell',        'href' => '#'],
+    ['label' => 'Đề thi',    'icon' => 'bx-edit',        'href' => 'tests.php'],
+    ['label' => 'Nâng cấp',  'icon' => 'bxf bx-star',   'href' => 'pricing.php', 'badge' => '-20%', 'highlight' => true],
 ];
 
 $bottomItems = [
-    ['label' => 'Phím tắt', 'icon' => 'bx-command', 'href' => '?panel=shortcuts'],
-    ['label' => 'Có gì mới', 'icon' => 'bx-mail-open', 'href' => '#', 'external' => true],
-    ['label' => 'Hỗ trợ', 'icon' => 'bx-help-circle', 'href' => 'tos.php?tab=lien-he', 'external' => true],
+    ['label' => 'Cài đặt',  'icon' => 'bx-cog',         'href' => 'profile.php'],
+    ['label' => 'Phím tắt', 'icon' => 'bx-command',     'href' => '?panel=shortcuts'],
+    ['label' => 'Có gì mới', 'icon' => 'bx-mail-open',  'href' => '#', 'external' => true],
+    ['label' => 'Hỗ trợ',    'icon' => 'bx-help-circle', 'href' => 'tos.php?tab=lien-he', 'external' => true],
 ];
 
 $shortcuts = [
@@ -50,12 +52,26 @@ $shortcuts = [
 
                 <!-- upgrade banner -->
                 <div class="px-3 py-3">
-                    <a href="pricing.php" class="upgrade-banner-custom d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                    <?php if (isset($_SESSION['is_premium']) && $_SESSION['is_premium']): ?>
+                    <?php $courseOnly = in_array($_SESSION['premium_plan'] ?? '', ['course']); ?>
+                    <a href="<?= $courseOnly ? 'courses.php' : 'billing.php' ?>"
+                       class="upgrade-banner-custom d-flex align-items-center justify-content-center gap-2 text-decoration-none"
+                       style="background: linear-gradient(135deg,#e1f5ee,#d1fae5);">
                         <i class='bxf bx-crown text-dark fs-6'></i>
-                        <span class="fw-bold text-dark small">Nâng cấp tài khoản</span>
+                        <span class="fw-bold text-dark" style="font-size:.8rem; white-space:nowrap;">
+                            <?= $courseOnly ? 'Khoá học đã mua' : 'Quản lý gói' ?>
+                        </span>
                         <div class="shine-overlay-custom"></div>
                     </a>
+                    <?php else: ?>
+                    <a href="pricing.php" class="upgrade-banner-custom d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                        <i class='bxf bx-crown text-dark fs-6'></i>
+                        <span class="fw-bold text-dark small" style="white-space:nowrap;">Nâng cấp tài khoản</span>
+                        <div class="shine-overlay-custom"></div>
+                    </a>
+                    <?php endif; ?>
                 </div>
+
 
                 <!-- main menu -->
                 <div class="px-2 py-1">
