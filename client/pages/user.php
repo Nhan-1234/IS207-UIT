@@ -202,23 +202,62 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
                             type: 'line',
                             data: {
                                 labels: json.data.chartData.map(d => d.date),
-                                datasets: [{
-                                    label: 'Tổng điểm',
-                                    data: json.data.chartData.map(d => d.total_score),
-                                    borderColor: '#1d9e75',
-                                    backgroundColor: 'rgba(29,158,117,.08)',
-                                    borderWidth: 2.5,
-                                    tension: 0.35,
-                                    fill: true,
-                                    pointBackgroundColor: '#1d9e75',
-                                    pointRadius: 4,
-                                }]
+                                datasets: [
+                                    {
+                                        label: 'Tổng điểm',
+                                        data: json.data.chartData.map(d => d.total_score),
+                                        borderColor: '#1d9e75',
+                                        backgroundColor: 'rgba(29,158,117,.04)',
+                                        borderWidth: 2.5,
+                                        tension: 0.35,
+                                        fill: true,
+                                        pointBackgroundColor: '#1d9e75',
+                                        pointRadius: 4,
+                                    },
+                                    {
+                                        label: 'Listening',
+                                        data: json.data.chartData.map(d => d.listening_score || 0),
+                                        borderColor: '#0284c7',
+                                        backgroundColor: 'rgba(2,132,199,.04)',
+                                        borderWidth: 2,
+                                        tension: 0.35,
+                                        fill: true,
+                                        pointBackgroundColor: '#0284c7',
+                                        pointRadius: 3,
+                                    },
+                                    {
+                                        label: 'Reading',
+                                        data: json.data.chartData.map(d => d.reading_score || 0),
+                                        borderColor: '#f59e0b',
+                                        backgroundColor: 'rgba(245,158,11,.04)',
+                                        borderWidth: 2,
+                                        tension: 0.35,
+                                        fill: true,
+                                        pointBackgroundColor: '#f59e0b',
+                                        pointRadius: 3,
+                                    }
+                                ]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
                                 scales: { y: { beginAtZero: true, max: 990 } },
-                                plugins: { tooltip: { mode: 'index', intersect: false } }
+                                plugins: { 
+                                    tooltip: { mode: 'index', intersect: false },
+                                    legend: {
+                                        position: 'top',
+                                        labels: {
+                                            boxWidth: 5,
+                                            usePointStyle: true,
+                                            pointStyle: 'circle',
+                                            padding: 20,
+                                            font: {
+                                                size: 12,
+                                                weight: '600'
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         });
                     }
