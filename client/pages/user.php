@@ -221,8 +221,7 @@ $greet = $hour < 12 ? 'Chào buổi sáng ☀️' : ($hour < 18 ? 'Chào buổi 
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script>
-		const USER_ID = <?= $userId ?>;
-		const API_URL = `/api/dashboard/stats?user_id=${USER_ID}`;
+		const API_URL = '/api/dashboard/stats';
 
 		$(document).ready(async function () {
 			try {
