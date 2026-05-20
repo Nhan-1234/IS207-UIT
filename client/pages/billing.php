@@ -49,19 +49,21 @@ if ($premiumUntil) {
 	$daysLeft = max(0, (int) ceil((strtotime($premiumUntil) - time()) / 86400));
 }
 
-// Tính số tiền hoàn lại dự kiến (tổng tất cả các giao dịch thành công trong vòng 7 ngày chưa hoàn tiền)
-$refundAmount = 0;
+// Tính số tiền hoàn lại dự kiến (tổng tất cả các giao dịch thành công trong vòng 7 ngày chưa hoàn tiền, khấu trừ 249k khóa học đúng 1 lần nếu có combo)
+$totalPaid = 0;
 $hasCombo = false;
 $refundWindow = 7 * 86400; // 7 ngày
 foreach ($history as $tx) {
 	if ($tx['status'] === 'success' && (time() - strtotime($tx['created_at']) <= $refundWindow)) {
-		$txRefund = $tx['price'];
+		$totalPaid += $tx['price'];
 		if (in_array($tx['plan_id'] ?? '', ['ultra', 'ultra_year'])) {
-			$txRefund = max(0, $txRefund - 249000);
 			$hasCombo = true;
 		}
-		$refundAmount += $txRefund;
 	}
+}
+$refundAmount = $totalPaid;
+if ($hasCombo) {
+	$refundAmount = max(0, $totalPaid - 249000);
 }
 
 // Kiểm tra xem giao dịch gần nhất có được hoàn tiền hay không
@@ -265,25 +267,26 @@ if ($lastPayment && $lastPayment['status'] === 'success') {
 				<div style="display: flex; flex-direction: column; gap: 6px;">
 					<?php foreach ($history as $tx): ?>
 						<?php if ($tx['status'] === 'success' && (time() - strtotime($tx['created_at']) <= $refundWindow)): ?>
-							<?php
-							$txRefund = $tx['price'];
-							$deducted = false;
-							if (in_array($tx['plan_id'] ?? '', ['ultra', 'ultra_year'])) {
-								$txRefund = max(0, $txRefund - 249000);
-								$deducted = true;
-							}
-							?>
 							<div style="display: flex; justify-content: space-between; align-items: center;">
 								<span>Gói <?= htmlspecialchars($tx['plan_name']) ?> (<?= date('d/m/Y', strtotime($tx['created_at'])) ?>)</span>
 								<span style="font-family: monospace; font-weight: 600; color: #0f172a;">
-									<?= number_format($txRefund, 0, ',', '.') ?>₫
-									<?php if ($deducted): ?>
-										<span style="color: #ef4444; font-size: 0.75rem; font-weight: 500;">(-249k khóa học)</span>
-									<?php endif; ?>
+									+<?= number_format($tx['price'], 0, ',', '.') ?>₫
 								</span>
 							</div>
 						<?php endif; ?>
 					<?php endforeach; ?>
+
+					<?php if ($hasCombo): ?>
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 6px; border-top: 1px dashed #cbd5e1; color: #ef4444; font-weight: 600;">
+							<span>Khấu trừ Khóa học (giữ quyền sở hữu)</span>
+							<span style="font-family: monospace;">-249.000₫</span>
+						</div>
+					<?php endif; ?>
+
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-weight: 700; color: #0f172a;">
+						<span>Tổng tiền nhận lại:</span>
+						<span style="font-family: monospace;"><?= number_format($refundAmount, 0, ',', '.') ?>₫</span>
+					</div>
 				</div>
 			</div>
 			<div class="rfm-note" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; margin: 0 0 24px;">

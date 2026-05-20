@@ -28,19 +28,25 @@ if ($userId && isset($conn)) {
 		$activeTxList = $stmtTxList->fetchAll(PDO::FETCH_ASSOC);
 
 		// 2. Tính tổng số tiền hoàn và cập nhật trạng thái các giao dịch đủ điều kiện
+		$totalPaid = 0;
+		$hasCombo = false;
 		foreach ($activeTxList as $tx) {
 			$txAge = time() - strtotime($tx['created_at']);
 			if ($txAge <= $refundWindow) {
-				$txRefund = $tx['price'];
+				$totalPaid += $tx['price'];
 				if (in_array($tx['plan_id'] ?? '', ['ultra', 'ultra_year'])) {
-					$txRefund = max(0, $txRefund - 249000);
+					$hasCombo = true;
 				}
-				$refundAmount += $txRefund;
 
 				// Cập nhật giao dịch thành 'refunded'
 				$stmtTxUpdate = $conn->prepare("UPDATE transaction_history SET status = 'refunded' WHERE id = :id");
 				$stmtTxUpdate->execute(['id' => $tx['id']]);
 			}
+		}
+
+		$refundAmount = $totalPaid;
+		if ($hasCombo) {
+			$refundAmount = max(0, $totalPaid - 249000);
 		}
 
 		// 3. Đọc dữ liệu users để giữ nguyên has_course
