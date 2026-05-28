@@ -249,7 +249,7 @@ function getTestCore($uuid) {
     global $conn;
     try {
         // Tìm đề thi theo UUID
-        $stmt = $conn->prepare("SELECT id, uuid, title, duration, is_premium FROM tests WHERE uuid = :uuid AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, uuid, title, duration, is_premium, audio_url FROM tests WHERE uuid = :uuid AND is_active = 1");
         $stmt->execute(['uuid' => $uuid]);
         $test = $stmt->fetch();
 
