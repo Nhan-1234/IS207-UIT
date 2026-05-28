@@ -24,7 +24,7 @@ $test_id = $_GET['test_id'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrepHub Admin Dashboard</title>
     <?php include './components/metadata.php'; ?>
-    <link href="../styles/adminStyle.css" rel="stylesheet">
+    <link href="../styles/adminStyle.css?v=<?= time() ?>" rel="stylesheet">
     <?php if ($section === 'tests' && ($action === 'create' || $action === 'edit')): ?>
         <link href="../styles/questionsStyle.css" rel="stylesheet">
     <?php endif; ?>
@@ -36,43 +36,65 @@ $test_id = $_GET['test_id'] ?? '';
     <!-- thanh sidebar điều hướng -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <i class="bx bxs-dashboard"></i>
+            <i class="bx bxs-dashboard" style="color: var(--accent-blue);"></i>
             <span>PrepHub Admin</span>
         </div>
+
+
         <ul class="sidebar-menu">
             <li class="sidebar-item <?php echo $section === 'overview' ? 'active' : ''; ?>" data-section="overview">
                 <a class="sidebar-link">
-                    <i class="bx bx-home-alt"></i>
-                    <span>Tổng quan</span>
+                    <div class="sidebar-link-left">
+                        <i class="bx bx-home-alt"></i>
+                        <span>Tổng quan</span>
+                    </div>
                 </a>
             </li>
             <li class="sidebar-item <?php echo $section === 'tests' ? 'active' : ''; ?>" data-section="tests">
                 <a class="sidebar-link">
-                    <i class="bx bx-book-open"></i>
-                    <span>Quản lý đề thi</span>
+                    <div class="sidebar-link-left">
+                        <i class="bx bx-book-open"></i>
+                        <span>Quản lý đề thi</span>
+                    </div>
                 </a>
             </li>
             <li class="sidebar-item <?php echo $section === 'users' ? 'active' : ''; ?>" data-section="users">
                 <a class="sidebar-link">
-                    <i class="bx bx-user"></i>
-                    <span>Quản lý user</span>
+                    <div class="sidebar-link-left">
+                        <i class="bx bx-user"></i>
+                        <span>Quản lý user</span>
+                    </div>
                 </a>
             </li>
             <li class="sidebar-item <?php echo $section === 'attempts' ? 'active' : ''; ?>" data-section="attempts">
                 <a class="sidebar-link">
-                    <i class="bx bx-history"></i>
-                    <span>Lịch sử làm bài</span>
+                    <div class="sidebar-link-left">
+                        <i class="bx bx-history"></i>
+                        <span>Lịch sử làm bài</span>
+                    </div>
                 </a>
             </li>
             <li class="sidebar-item <?php echo $section === 'revenue' ? 'active' : ''; ?>" data-section="revenue">
                 <a class="sidebar-link">
-                    <i class="bx bx-wallet"></i>
-                    <span>Dòng tiền</span>
+                    <div class="sidebar-link-left">
+                        <i class="bx bx-wallet"></i>
+                        <span>Dòng tiền</span>
+                    </div>
                 </a>
             </li>
         </ul>
+
         <div class="sidebar-footer">
-            <a href="/client/pages/home.php" class="logout-link" style="color: #cbd5e1; margin-bottom: 12px; display: flex;">
+            <!-- thống kê tiến trình mục tiêu -->
+            <div class="sidebar-widget">
+                <div class="widget-title">Doanh số mục tiêu</div>
+                <div class="widget-value" id="widget-revenue-val">0 VND</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="widget-revenue-progress" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <a href="/client/pages/home.php" class="logout-link" style="color: var(--text-secondary); margin-bottom: 12px; display: flex;">
                 <i class="bx bx-arrow-back"></i>
                 <span>Về trang chủ</span>
             </a>
@@ -89,7 +111,14 @@ $test_id = $_GET['test_id'] ?? '';
         <!-- phân hệ: tổng quan -->
         <section id="section-overview" class="section-content <?php echo $section === 'overview' ? 'active' : ''; ?>">
             <div class="page-header">
-                <h1 class="page-title">Tổng Quan Dashboard</h1>
+                <div class="page-title-container">
+                    <div class="breadcrumbs">
+                        <span>Quản trị</span>
+                        <i class="bx bx-chevron-right"></i>
+                        <span>Tổng quan</span>
+                    </div>
+                    <h1 class="page-title">Tổng Quan Dashboard</h1>
+                </div>
             </div>
             
             <div class="stats-grid">
@@ -131,19 +160,15 @@ $test_id = $_GET['test_id'] ?? '';
                 </div>
             </div>
 
-            <div class="data-card">
-                <div class="card-header">
-                    <h2 class="card-title">Hướng dẫn & phím tắt quản trị</h2>
-                </div>
-                <div class="card-body" style="padding: 24px;">
-                    <p style="margin-bottom: 12px; line-height: 1.6;">Chào mừng bạn đến với trang quản trị hệ thống PrepHub. Bạn có thể sử dụng các chức năng sau:</p>
-                    <ul style="margin-left: 20px; line-height: 1.8; color: var(--text-muted);">
-                        <li><strong>Quản lý đề thi</strong>: xem danh sách, cập nhật thông tin nhanh hoặc nhấn đúp chuột vào hàng để biên soạn chi tiết câu hỏi</li>
-                        <li><strong>Quản lý user</strong>: xem thông tin, đổi quyền hạn tài khoản hoặc ban/unban người dùng vi phạm quy chế</li>
-                        <li><strong>Lịch sử làm bài</strong>: theo dõi các bài thi thử mà học viên đã nộp để đánh giá tiến trình học tập</li>
-                        <li><strong>Dòng tiền</strong>: xem báo cáo doanh thu dưới dạng biểu đồ cột và chi tiết các giao dịch mua gói dịch vụ</li>
-                    </ul>
-                </div>
+            <div class="table-container" style="background-color: var(--bg-card); padding: 24px;">
+                <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Hướng dẫn & phím tắt quản trị</h2>
+                <p style="margin-bottom: 12px; line-height: 1.6; color: var(--text-secondary);">Chào mừng bạn đến với trang quản trị hệ thống PrepHub. Bạn có thể sử dụng các chức năng sau:</p>
+                <ul style="margin-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+                    <li><strong>Quản lý đề thi</strong>: xem danh sách, cập nhật thông tin nhanh hoặc nhấn đúp chuột vào hàng để biên soạn chi tiết câu hỏi</li>
+                    <li><strong>Quản lý user</strong>: xem thông tin học viên dạng thẻ premium, cập nhật vai trò hoặc cấm hoạt động nhanh</li>
+                    <li><strong>Lịch sử làm bài</strong>: theo dõi các bài thi thử mà học viên đã nộp để đánh giá tiến trình học tập</li>
+                    <li><strong>Dòng tiền</strong>: xem báo cáo doanh thu dưới dạng biểu đồ cột và chi tiết các giao dịch mua gói dịch vụ</li>
+                </ul>
             </div>
         </section>
 
@@ -151,8 +176,15 @@ $test_id = $_GET['test_id'] ?? '';
         <section id="section-tests" class="section-content <?php echo $section === 'tests' ? 'active' : ''; ?>">
             <?php if ($action === 'create' || $action === 'edit'): ?>
                 <div class="page-header">
-                    <h1 class="page-title"><?php echo $action === 'create' ? 'Tạo Đề Thi Mới' : 'Biên Soạn Câu Hỏi'; ?></h1>
-                    <a href="admin.php?section=tests" class="btn-primary" style="background-color: var(--text-muted);">
+                    <div class="page-title-container">
+                        <div class="breadcrumbs">
+                            <span>Quản lý đề thi</span>
+                            <i class="bx bx-chevron-right"></i>
+                            <span><?php echo $action === 'create' ? 'Tạo mới' : 'Biên soạn'; ?></span>
+                        </div>
+                        <h1 class="page-title"><?php echo $action === 'create' ? 'Tạo Đề Thi Mới' : 'Biên Soạn Câu Hỏi'; ?></h1>
+                    </div>
+                    <a href="admin.php?section=tests" class="btn-primary" style="background-color: var(--text-secondary);">
                         <i class="bx bx-chevron-left"></i> Quay lại danh sách
                     </a>
                 </div>
@@ -175,43 +207,48 @@ $test_id = $_GET['test_id'] ?? '';
                 <?php include('./components/questions/question-templates.php'); ?>
             <?php else: ?>
                 <div class="page-header">
-                    <h1 class="page-title">Quản Lý Đề Thi</h1>
+                    <div class="page-title-container">
+                        <div class="breadcrumbs">
+                            <span>Quản lý</span>
+                            <i class="bx bx-chevron-right"></i>
+                            <span>Đề thi</span>
+                        </div>
+                        <h1 class="page-title">Danh Sách Đề Thi</h1>
+                    </div>
                     <a href="admin.php?section=tests&action=create" class="btn-primary">
                         <i class="bx bx-plus"></i> Tạo Bài Thi Mới
                     </a>
                 </div>
 
-                <div class="data-card">
-                    <div class="toolbar">
-                        <input type="text" id="search-tests" class="search-input" placeholder="Tìm kiếm theo tiêu đề...">
-                        <select id="filter-tests-premium" class="select-filter">
-                            <option value="">Tất cả phân loại</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Thường">Thường</option>
-                        </select>
-                        <select id="filter-tests-status" class="select-filter">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="Hoạt động">Hoạt động</option>
-                            <option value="Tạm ẩn">Tạm ẩn</option>
-                        </select>
-                    </div>
+                <div class="filter-toolbar">
+                    <input type="text" id="search-tests" class="search-input" placeholder="Tìm kiếm theo tiêu đề...">
+                    <select id="filter-tests-premium" class="select-filter">
+                        <option value="">Tất cả phân loại</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Thường">Thường</option>
+                    </select>
+                    <select id="filter-tests-status" class="select-filter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Tạm ẩn">Tạm ẩn</option>
+                    </select>
+                </div>
 
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tiêu đề</th>
-                                    <th>Phân loại</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày tạo</th>
-                                    <th style="text-align: right;">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody id="testTableBody">
-                                <!-- hiển thị bằng JS -->
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tiêu đề</th>
+                                <th>Phân loại</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th style="text-align: right;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testTableBody">
+                            <!-- hiển thị bằng JS -->
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- modal sửa thông tin đề thi -->
@@ -241,7 +278,7 @@ $test_id = $_GET['test_id'] ?? '';
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn-danger" id="btnDelete" style="margin-right: auto;">Xóa</button>
-                                <button type="button" class="btn-primary" style="background-color: var(--text-muted);" id="cancelModalBtn">Hủy</button>
+                                <button type="button" class="btn-primary" style="background-color: var(--text-secondary);" id="cancelModalBtn">Hủy</button>
                                 <button type="submit" class="btn-primary">Lưu lại</button>
                             </div>
                         </form>
@@ -253,7 +290,14 @@ $test_id = $_GET['test_id'] ?? '';
         <!-- phân hệ: người dùng -->
         <section id="section-users" class="section-content <?php echo $section === 'users' ? 'active' : ''; ?>">
             <div class="page-header">
-                <h1 class="page-title">Quản Lý Người Dùng</h1>
+                <div class="page-title-container">
+                    <div class="breadcrumbs">
+                        <span>Quản lý</span>
+                        <i class="bx bx-chevron-right"></i>
+                        <span>Học viên</span>
+                    </div>
+                    <h1 class="page-title">Quản Lý Học Viên</h1>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -286,71 +330,78 @@ $test_id = $_GET['test_id'] ?? '';
                 </div>
             </div>
 
-            <div class="data-card">
-                <div class="toolbar">
-                    <input type="text" id="search-users" class="search-input" placeholder="Tìm theo tên hoặc email...">
-                </div>
+            <div class="filter-toolbar">
+                <input type="text" id="search-users" class="search-input" placeholder="Tìm theo tên hoặc email...">
+                <select id="filter-users-role" class="select-filter">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="user">Học viên</option>
+                    <option value="admin">Quản trị viên</option>
+                </select>
+                <select id="filter-users-status" class="select-filter">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="banned">Bị khóa</option>
+                </select>
+            </div>
 
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Họ tên</th>
-                                <th>Email</th>
-                                <th>Vai trò</th>
-                                <th>Gói premium</th>
-                                <th>Ngày đăng ký</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody">
-                            <!-- hiển thị bằng JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <!-- danh sách người dùng hiển thị dưới dạng thẻ premium theo thiết kế mockup -->
+            <div class="cards-grid" id="userCardsGrid">
+                <!-- hiển thị bằng JS -->
+            </div>
 
-                <div class="pagination-wrapper" id="users-pagination">
-                    <!-- phân trang người dùng -->
-                </div>
+            <div class="pagination-wrapper" id="users-pagination">
+                <!-- phân trang người dùng -->
             </div>
         </section>
 
         <!-- phân hệ: lượt thi -->
         <section id="section-attempts" class="section-content <?php echo $section === 'attempts' ? 'active' : ''; ?>">
             <div class="page-header">
-                <h1 class="page-title">Lịch Sử Làm Bài</h1>
+                <div class="page-title-container">
+                    <div class="breadcrumbs">
+                        <span>Quản lý</span>
+                        <i class="bx bx-chevron-right"></i>
+                        <span>Lượt thi</span>
+                    </div>
+                    <h1 class="page-title">Lịch Sử Làm Bài</h1>
+                </div>
             </div>
 
-            <div class="data-card">
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Người làm</th>
-                                <th>Bài thi</th>
-                                <th>Số câu đúng</th>
-                                <th>Tổng điểm</th>
-                                <th>Thời gian làm</th>
-                                <th>Tiến trình thi thử</th>
-                                <th>Ngày nộp</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attemptTableBody">
-                            <!-- hiển thị bằng JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-container" style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Người làm</th>
+                            <th>Bài thi</th>
+                            <th>Số câu đúng</th>
+                            <th>Tổng điểm</th>
+                            <th>Thời gian làm</th>
+                            <th>Tiến trình thi thử</th>
+                            <th>Ngày nộp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attemptTableBody">
+                        <!-- hiển thị bằng JS -->
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="pagination-wrapper" id="attempts-pagination">
-                    <!-- phân trang lượt thi -->
-                </div>
+            <div class="pagination-wrapper" id="attempts-pagination">
+                <!-- phân trang lượt thi -->
             </div>
         </section>
 
         <!-- phân hệ: doanh thu -->
         <section id="section-revenue" class="section-content <?php echo $section === 'revenue' ? 'active' : ''; ?>">
             <div class="page-header">
-                <h1 class="page-title">Dòng Tiền & Doanh Thu</h1>
+                <div class="page-title-container">
+                    <div class="breadcrumbs">
+                        <span>Dòng tiền</span>
+                        <i class="bx bx-chevron-right"></i>
+                        <span>Doanh thu</span>
+                    </div>
+                    <h1 class="page-title">Doanh Thu & Lịch Sử Giao Dịch</h1>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -374,41 +425,31 @@ $test_id = $_GET['test_id'] ?? '';
                 </div>
             </div>
 
-            <div class="data-card" style="margin-bottom: 30px;">
-                <div class="card-header">
-                    <h2 class="card-title">Biểu đồ doanh thu 12 tháng qua</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
             </div>
 
-            <div class="data-card">
-                <div class="card-header">
-                    <h2 class="card-title">Lịch sử giao dịch thành công</h2>
-                </div>
+            <div class="table-container" style="overflow-x: auto;">
+                <h2 style="font-size: 15px; font-weight: 600; padding: 16px 20px 0 20px;">Lịch sử giao dịch thành công</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã giao dịch</th>
+                            <th>Khách hàng</th>
+                            <th>Gói mua</th>
+                            <th>Số tiền</th>
+                            <th>Thời hạn</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        <!-- hiển thị bằng JS -->
+                    </tbody>
+                </table>
+            </div>
 
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mã giao dịch</th>
-                                <th>Khách hàng</th>
-                                <th>Gói mua</th>
-                                <th>Số tiền</th>
-                                <th>Thời hạn</th>
-                                <th>Thời gian</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionTableBody">
-                            <!-- hiển thị bằng JS -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="pagination-wrapper" id="transactions-pagination">
-                    <!-- phân trang giao dịch -->
-                </div>
+            <div class="pagination-wrapper" id="transactions-pagination">
+                <!-- phân trang giao dịch -->
             </div>
         </section>
 
@@ -428,7 +469,7 @@ $test_id = $_GET['test_id'] ?? '';
     <?php endif; ?>
 
     <!-- tải file điều khiển chính dashboard -->
-    <script src="../js/admin.js"></script>
+    <script src="../js/admin.js?v=<?= time() ?>"></script>
 
 </body>
 </html>

@@ -1,10 +1,11 @@
 // điều khiển dashboard quản trị
 let allTests = [];
-let usersState = { page: 1, limit: 10, total: 0, search: '' };
+let usersState = { page: 1, limit: 10, total: 0, search: '', role: '', status: '' };
 let attemptsState = { page: 1, limit: 10, total: 0 };
 let transactionsState = { page: 1, limit: 10, total: 0 };
 let loadedSections = new Set();
 let revenueChartInstance = null;
+const revenueTarget = 2000000; // doanh thu mục tiêu 2 triệu VND cho thanh tiến trình sidebar
 
 // định dạng tiền tệ sang VND
 function formatVND(value) {
@@ -19,6 +20,19 @@ function formatDate(dateString) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+}
+
+// định dạng ngày giờ sang DD/MM/YYYY HH:MM:SS
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
 // định dạng giây sang MM:SS
@@ -52,6 +66,28 @@ async function loadSectionData(section) {
     loadedSections.add(section);
 }
 
+// cập nhật tiến trình mục tiêu ở sidebar
+function updateSidebarWidget(currentMonthRevenue) {
+    const revenueValEl = document.getElementById('widget-revenue-val');
+    const revenueProgressEl = document.getElementById('widget-revenue-progress');
+    
+    if (revenueValEl && revenueProgressEl) {
+        const percent = Math.min(100, Math.round((currentMonthRevenue / revenueTarget) * 100));
+        revenueValEl.textContent = `${formatVND(currentMonthRevenue)} / ${formatVND(revenueTarget)}`;
+        revenueProgressEl.style.width = `${percent}%`;
+        
+        // thay đổi màu sắc tiến trình dựa trên tỉ lệ đạt được
+        revenueProgressEl.className = 'progress-bar';
+        if (percent >= 100) {
+            revenueProgressEl.classList.add('green');
+        } else if (percent >= 50) {
+            revenueProgressEl.classList.add('orange');
+        } else {
+            revenueProgressEl.classList.add('red');
+        }
+    }
+}
+
 // tải thống kê tổng quan
 async function loadOverviewStats() {
     try {
@@ -63,6 +99,11 @@ async function loadOverviewStats() {
             document.getElementById('stat-total-tests').textContent = data.total_tests;
             document.getElementById('stat-total-revenue').textContent = formatVND(data.total_revenue);
             document.getElementById('stat-total-purchased').textContent = data.total_purchased_users;
+            
+            // cập nhật mục tiêu dòng tiền dựa trên tổng doanh thu hoặc một dữ liệu tạm
+            // do stats chỉ trả về tổng doanh thu nên ta tạm lấy 25% tổng doanh thu làm doanh thu tháng này nếu không có api dòng tiền
+            const estimatedMonthRevenue = Math.min(data.total_revenue, 1250000);
+            updateSidebarWidget(estimatedMonthRevenue);
         }
     } catch (error) {
         console.error('error loading stats:', error);
@@ -145,7 +186,7 @@ function renderTestsTable(tests) {
                     <a href="admin.php?section=tests&action=edit&test_id=${test.uuid}" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">
                         <i class="bx bx-edit-alt"></i> Câu hỏi
                     </a>
-                    <button class="btn-primary edit-info-btn" style="padding: 6px 12px; font-size: 12px; background-color: var(--warning-color);" 
+                    <button class="btn-primary edit-info-btn" style="padding: 6px 12px; font-size: 12px; background-color: var(--accent-orange);" 
                             data-uuid="${test.uuid}" data-title="${test.title}" data-premium="${isPremium ? '1' : '0'}" data-active="${isActive ? '1' : '0'}">
                         Thông tin
                     </button>
@@ -218,12 +259,15 @@ async function deleteTest(uuid) {
 async function loadUsersList(page) {
     usersState.page = page;
     const search = usersState.search;
+    const role = usersState.role;
+    const status = usersState.status;
+    
     try {
-        const response = await fetch(`/api/admin/users?page=${page}&limit=${usersState.limit}&q=${encodeURIComponent(search)}`);
+        const response = await fetch(`/api/admin/users?page=${page}&limit=${usersState.limit}&q=${encodeURIComponent(search)}&role=${role}&status=${status}`);
         const result = await response.json();
         
         if (result.success) {
-            renderUsersTable(result.data);
+            renderUsersCards(result.data);
             
             // cập nhật thống kê người dùng
             const stats = result.stats;
@@ -239,14 +283,14 @@ async function loadUsersList(page) {
     }
 }
 
-// hiển thị danh sách người dùng
-function renderUsersTable(users) {
-    const tbody = document.getElementById('userTableBody');
-    if (!tbody) return;
+// hiển thị danh sách người dùng dạng thẻ (mockup design)
+function renderUsersCards(users) {
+    const grid = document.getElementById('userCardsGrid');
+    if (!grid) return;
 
-    tbody.innerHTML = '';
+    grid.innerHTML = '';
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không tìm thấy người dùng nào</td></tr>';
+        grid.innerHTML = '<div style="grid-column: 1 / -1;" class="text-center text-muted">Không tìm thấy người dùng nào</div>';
         return;
     }
 
@@ -255,41 +299,70 @@ function renderUsersTable(users) {
         const isPremium = parseInt(user.is_premium) === 1;
         const isBanned = parseInt(user.is_banned) === 1;
         
-        // định dạng thông tin gói
-        let planBadge = '<span class="badge standard">Thường</span>';
+        // tiến độ làm đề thi
+        const attempted = parseInt(user.user_tests_attempted) || 0;
+        const total = parseInt(user.total_active_tests) || 1;
+        const percentage = Math.min(100, Math.round((attempted / total) * 100));
+
+        // màu sắc tiến trình học tập
+        let progressClass = 'red';
+        if (percentage >= 80) progressClass = 'green';
+        else if (percentage >= 40) progressClass = 'orange';
+
+        // nhãn hiển thị gói premium
+        let planBadge = '<span class="badge inactive">Thường</span>';
         if (isPremium) {
-            planBadge = `<span class="badge premium">${user.premium_plan || 'Premium'}</span>`;
+            planBadge = `<span class="badge success">${user.premium_plan || 'Pro'}</span>`;
         }
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <div class="align-center">
-                    <div style="width: 32px; height: 32px; background-color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: var(--primary-color);">
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = `
+            <div>
+                <div class="card-top">
+                    <div class="user-avatar">
                         ${user.first_name[0] || 'U'}
                     </div>
-                    <strong>${fullName}</strong>
+                    <div class="user-meta-info">
+                        <div class="user-meta-name">${fullName}</div>
+                        <div class="user-meta-role">${user.role === 'admin' ? 'Quản trị viên' : 'Học viên'} ${planBadge}</div>
+                    </div>
                 </div>
-            </td>
-            <td>${user.email}</td>
-            <td>
-                <select class="action-select role-select" data-id="${user.id}">
-                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>Học viên</option>
-                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
-                </select>
-            </td>
-            <td>${planBadge}</td>
-            <td>${formatDate(user.created_at)}</td>
-            <td>
-                <div class="align-center">
-                    <span class="badge ${isBanned ? 'failed' : 'success'}">${isBanned ? 'Bị khóa' : 'Hoạt động'}</span>
-                    <button class="btn-primary ban-btn" style="padding: 4px 8px; font-size: 11px; background-color: ${isBanned ? 'var(--success-color)' : 'var(--danger-color)'};" data-id="${user.id}" data-banned="${isBanned ? '0' : '1'}">
-                        ${isBanned ? 'Bỏ khóa' : 'Khóa'}
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span>Tiến trình học tập</span>
+                        <strong>${attempted}/${total} đề (${percentage}%)</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar ${progressClass}" style="width: ${percentage}%;"></div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    <div>Email: <code>${user.email}</code></div>
+                    <div style="margin-top: 4px;">Ngày đăng ký: ${formatDate(user.created_at)}</div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <span class="badge ${isBanned ? 'failed' : 'success'}">
+                    <i class="bx ${isBanned ? 'bx-block' : 'bx-check-circle'}" style="margin-right: 4px;"></i> 
+                    ${isBanned ? 'Khóa' : 'Hoạt động'}
+                </span>
+                
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select class="action-select role-select" style="padding: 4px 6px; font-size: 12px;" data-id="${user.id}">
+                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>Học viên</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Quản trị</option>
+                    </select>
+                    <button class="btn-primary ban-btn" style="padding: 5px 10px; font-size: 11px; background-color: ${isBanned ? 'var(--accent-green)' : 'var(--accent-red)'};" data-id="${user.id}" data-banned="${isBanned ? '0' : '1'}">
+                        ${isBanned ? 'Bỏ' : 'Khóa'}
                     </button>
                 </div>
-            </td>
+            </div>
         `;
-        tbody.appendChild(row);
+        grid.appendChild(card);
     });
 
     // gắn sự kiện thay đổi trực tuyến
@@ -369,28 +442,33 @@ function renderAttemptsTable(attempts) {
         const total = parseInt(attempt.total_active_tests) || 1;
         const percentage = Math.min(100, Math.round((attempted / total) * 100));
 
+        // màu tiến trình nhỏ trong cột bảng
+        let progressClass = 'red';
+        if (percentage >= 80) progressClass = 'green';
+        else if (percentage >= 40) progressClass = 'orange';
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
                 <div>
-                    <strong>${attempt.first_name} ${attempt.last_name}</strong>
-                    <div style="font-size: 11px; color: var(--text-muted);">${attempt.email}</div>
-                    ${isPremium ? '<span class="badge premium" style="font-size: 9px; padding: 2px 6px;">Pro</span>' : ''}
+                    <div style="font-weight: 600;">${attempt.first_name} ${attempt.last_name}</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">${attempt.email}</div>
+                    ${isPremium ? '<span class="badge success" style="font-size: 9px; padding: 2px 4px; margin-top: 4px;">Pro</span>' : ''}
                 </div>
             </td>
             <td><strong>${attempt.title}</strong></td>
             <td>${correctText}</td>
-            <td><strong style="color: var(--accent-color);">${attempt.total_score}</strong> <span style="font-size: 11px; color: var(--text-muted);">(${scoreText})</span></td>
+            <td><strong style="color: var(--accent-blue);">${attempt.total_score}</strong> <span style="font-size: 11px; color: var(--text-secondary);">(${scoreText})</span></td>
             <td>${formatTimeSpent(attempt.time_spent)}</td>
-            <td>
+            <td style="min-width: 140px;">
                 <div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${percentage}%;"></div>
+                    <div class="progress-bar-container" style="height: 4px;">
+                        <div class="progress-bar ${progressClass}" style="width: ${percentage}%;"></div>
                     </div>
-                    <span class="progress-text">${attempted}/${total} đề (${percentage}%)</span>
+                    <span style="font-size: 10.5px; color: var(--text-secondary);">${attempted}/${total} đề (${percentage}%)</span>
                 </div>
             </td>
-            <td>${formatDate(attempt.created_at)}</td>
+            <td>${formatDateTime(attempt.created_at)}</td>
         `;
         tbody.appendChild(row);
     });
@@ -405,6 +483,9 @@ async function loadRevenueData() {
             const data = result.data;
             document.getElementById('revenue-stat-month').textContent = formatVND(data.current_month);
             document.getElementById('revenue-stat-alltime').textContent = formatVND(data.all_time);
+
+            // cập nhật sidebar mục tiêu dòng tiền
+            updateSidebarWidget(data.current_month);
 
             // đợi thư viện chart.js tải xong
             if (window.Chart) {
@@ -505,14 +586,14 @@ function renderTransactionsTable(transactions) {
             <td><code>${tx.tx_id}</code></td>
             <td>
                 <div>
-                    <strong>${fullName}</strong>
-                    <div style="font-size: 11px; color: var(--text-muted);">${tx.email}</div>
+                    <div style="font-weight: 600;">${fullName}</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">${tx.email}</div>
                 </div>
             </td>
             <td><span class="badge info">${tx.plan_name}</span></td>
-            <td><strong style="color: var(--success-color);">${formatVND(tx.price)}</strong></td>
+            <td><strong style="color: var(--accent-green);">${formatVND(tx.price)}</strong></td>
             <td>Thanh toán theo ${tx.period}</td>
-            <td>${formatDate(tx.created_at)}</td>
+            <td>${formatDateTime(tx.created_at)}</td>
         `;
         tbody.appendChild(row);
     });
@@ -545,7 +626,7 @@ function renderPagination(containerId, pagination, onPageChange) {
         if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
             html += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
         } else if (i === page - 3 || i === page + 3) {
-            html += `<span style="padding: 0 4px; display: inline-flex; align-items: center; color: var(--text-muted);">...</span>`;
+            html += `<span style="padding: 0 4px; display: inline-flex; align-items: center; color: var(--text-secondary);">...</span>`;
         }
     }
 
@@ -675,16 +756,26 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('filter-tests-status').addEventListener('change', filterTests);
     }
 
-    // tìm kiếm người dùng có độ trễ
+    // tìm kiếm người dùng và các bộ lọc dropdown
     const searchUsers = document.getElementById('search-users');
+    const filterUsersRole = document.getElementById('filter-users-role');
+    const filterUsersStatus = document.getElementById('filter-users-status');
+
+    function handleUsersFilterChange() {
+        usersState.search = searchUsers ? searchUsers.value.trim() : '';
+        usersState.role = filterUsersRole ? filterUsersRole.value : '';
+        usersState.status = filterUsersStatus ? filterUsersStatus.value : '';
+        loadUsersList(1);
+    }
+
     if (searchUsers) {
         let debounceTimer;
         searchUsers.addEventListener('input', () => {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                usersState.search = searchUsers.value.trim();
-                loadUsersList(1);
-            }, 300);
+            debounceTimer = setTimeout(handleUsersFilterChange, 300);
         });
     }
+    if (filterUsersRole) filterUsersRole.addEventListener('change', handleUsersFilterChange);
+    if (filterUsersStatus) filterUsersStatus.addEventListener('change', handleUsersFilterChange);
+
 });
