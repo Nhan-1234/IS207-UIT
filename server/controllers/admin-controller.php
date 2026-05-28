@@ -293,3 +293,599 @@ function getAdminTransactions() {
         sendError("Lỗi database: " . $e->getMessage(), 500);
     }
 }
+
+// recursive file finder
+function findFileInDirRecursive($dir, $filename) {
+    $dir = rtrim($dir, '/');
+    if (!is_dir($dir)) return null;
+    $files = scandir($dir);
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $path = $dir . '/' . $file;
+        if (is_dir($path)) {
+            $res = findFileInDirRecursive($path, $filename);
+            if ($res !== null) return $res;
+        } elseif (is_file($path) && basename($path) === $filename) {
+            return $path;
+        }
+    }
+    return null;
+}
+
+// recursive directory removal
+function helperRemoveDir($dir) {
+    if (!is_dir($dir)) return;
+    $files = scandir($dir);
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $path = $dir . '/' . $file;
+        if (is_dir($path)) {
+            helperRemoveDir($path);
+        } else {
+            unlink($path);
+        }
+    }
+    rmdir($dir);
+}
+
+// slugify title
+function helperSlugify($text) {
+    $unicode = array(
+        'a'=>'á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ|Á|À|Ả|Ã|Ạ|Ă|Ắ|Ằ|Ẳ|Ẵ|Ặ|Â|Ấ|Ầ|Ẩ|ẫ|ậ',
+        'd'=>'đ|Đ',
+        'e'=>'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ|É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
+        'i'=>'í|ì|ỉ|ĩ|ị|Í|Ì|Ỉ|Ĩ|Ị',
+        'o'=>'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ|Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ỗ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
+        'u'=>'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự|Ú|Ù|Ủ|Ũ|Ụ|Ư|Ứ|Ừ|Ử|Ữ|Ự',
+        'y'=>'ý|ỳ|ỷ|ỹ|ỵ|Ý|Ỳ|Ỷ|Ỹ|Ỵ'
+    );
+    foreach ($unicode as $nonUnicode => $uni) {
+        $text = preg_replace("/($uni)/i", $nonUnicode, $text);
+    }
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    $text = preg_replace('~[^-\w]+~', '', $text);
+    $text = trim($text, '-');
+    $text = preg_replace('~-+~', '-', $text);
+    $text = strtolower($text);
+    return empty($text) ? 'n-a' : $text;
+}
+
+// get inner html of a node
+function getInnerHtmlNode($node) {
+    $html = '';
+    foreach ($node->childNodes as $child) {
+        $html .= $node->ownerDocument->saveHTML($child);
+    }
+    return trim($html);
+}
+
+// parse question block
+function helperParseQuestion($xpath, $node, $examAudioUrl, &$isFirstQuestion) {
+    $q = ['correct_answer' => 'A'];
+    $numNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' question-num ')]", $node);
+    $numText = '';
+    if ($numNodes->length > 0) {
+        $numText = rtrim(trim($numNodes->item(0)->textContent), '.');
+    }
+    $num = (int)$numText;
+    if ($num > 0) {
+        $q['question_number'] = $num;
+    }
+    $contentNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' question-content ')]", $node);
+    $content = '';
+    if ($contentNodes->length > 0) {
+        $content = trim($contentNodes->item(0)->textContent);
+    }
+    if (str_contains($content, 'Mark your answer')) {
+        $content = '';
+    }
+    $q['content'] = $content;
+    $imgNodes = $node->getElementsByTagName('img');
+    if ($imgNodes->length > 0) {
+        $src = $imgNodes->item(0)->getAttribute('src');
+        if ($src) {
+            $q['image_url'] = basename($src);
+        }
+    }
+    $options = [];
+    $optNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' option ')]", $node);
+    foreach ($optNodes as $opt) {
+        $inputNodes = $xpath->query("descendant::input", $opt);
+        $label = '';
+        if ($inputNodes->length > 0) {
+            $label = trim($inputNodes->item(0)->getAttribute('value') ?? '');
+        }
+        $labelNodes = $xpath->query("descendant::label", $opt);
+        $labelText = '';
+        if ($labelNodes->length > 0) {
+            $labelText = $labelNodes->item(0)->textContent;
+        }
+        $cleaned = trim($labelText);
+        if ($label !== '') {
+            $prefix = "({$label})";
+            if (str_starts_with($cleaned, $prefix)) {
+                $cleaned = trim(substr($cleaned, strlen($prefix)));
+            }
+        }
+        if (empty($label)) {
+            foreach ($opt->childNodes as $child) {
+                if ($child->nodeType === XML_TEXT_NODE) {
+                    $text = trim($child->textContent);
+                    if (preg_match('/\(([A-D])\)/', $text, $matches)) {
+                        $label = $matches[1];
+                        break;
+                    } elseif (strlen($text) === 1 && $text >= 'A' && $text <= 'D') {
+                        $label = $text;
+                        break;
+                    }
+                }
+            }
+            if (!empty($label)) {
+                $optContentNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' option-content ')]", $opt);
+                if ($optContentNodes->length > 0) {
+                    $cleaned = trim($optContentNodes->item(0)->textContent);
+                }
+            }
+        }
+        if (!empty($label)) {
+            $options[] = [
+                'label' => $label,
+                'content' => $cleaned
+            ];
+        }
+    }
+    $q['options'] = $options;
+    if ($isFirstQuestion && !empty($examAudioUrl)) {
+        $q['audio_url'] = $examAudioUrl;
+        $isFirstQuestion = false;
+    }
+    return $q;
+}
+
+// parse exam html contents
+function helperParseExamHtml($htmlContent) {
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    if (!str_contains($htmlContent, '<?xml encoding=')) {
+        $htmlContent = '<?xml encoding="UTF-8">' . $htmlContent;
+    }
+    $doc->loadHTML($htmlContent);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    $duration = 7200;
+    $audioUrl = '';
+    $scripts = $doc->getElementsByTagName('script');
+    foreach ($scripts as $script) {
+        $text = $script->textContent;
+        if (preg_match('/testDuration\s*=\s*(\d+)/', $text, $matches)) {
+            $duration = (int)$matches[1];
+        }
+        if (preg_match('/listeningAudio\s*=\s*["\']([^"\']+)["\']/', $text, $matches)) {
+            $audioUrl = basename($matches[1]);
+        }
+    }
+    if (empty($audioUrl)) {
+        $audioSources = $xpath->query('//audio[@id="full-test-audio"]//source');
+        if ($audioSources->length > 0) {
+            $src = $audioSources->item(0)->getAttribute('src');
+            if ($src) {
+                $audioUrl = basename($src);
+            }
+        }
+    }
+    $titleNode = $doc->getElementsByTagName('title')->item(0);
+    $title = $titleNode ? trim($titleNode->textContent) : 'TOEIC Exam';
+    $parts = [];
+    $partIDs = ['part-1', 'part-2', 'part-3', 'part-4', 'part-5', 'part-6', 'part-7'];
+    $isFirstQuestion = true;
+    foreach ($partIDs as $partID) {
+        $section = $xpath->query("//section[@id='{$partID}']")->item(0);
+        if (!$section) continue;
+        $partNum = (int)str_replace('part-', '', $partID);
+        $partData = ['part_number' => $partNum];
+        if (in_array($partNum, [1, 2, 5])) {
+            $questions = [];
+            $mcqNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' mcq-wrapper ')]", $section);
+            foreach ($mcqNodes as $s) {
+                $q = helperParseQuestion($xpath, $s, null, $isFirstQuestion);
+                if (isset($q['question_number'])) {
+                    $questions[] = $q;
+                }
+            }
+            $partData['questions'] = $questions;
+        } else {
+            $passages = [];
+            $mcqgNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' mcqg-wrapper ')]", $section);
+            foreach ($mcqgNodes as $s) {
+                $passage = [];
+                $questions = [];
+                $mcqNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' mcq-wrapper ')]", $s);
+                foreach ($mcqNodes as $qSel) {
+                    $q = helperParseQuestion($xpath, $qSel, null, $isFirstQuestion);
+                    if (isset($q['question_number'])) {
+                        $questions[] = $q;
+                    }
+                }
+                if (empty($questions)) continue;
+                $passage['questions'] = $questions;
+                $imgNodes = $s->getElementsByTagName('img');
+                if ($imgNodes->length > 0) {
+                    $src = $imgNodes->item(0)->getAttribute('src');
+                    if ($src) {
+                        $passage['image_url'] = basename($src);
+                    }
+                }
+                if (in_array($partNum, [6, 7])) {
+                    $pContentNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' passage-content ') or contains(concat(' ', normalize-space(@class), ' '), ' reading-passage ') or self::article]", $s);
+                    if ($pContentNodes->length > 0) {
+                        $passage['content'] = trim($pContentNodes->item(0)->textContent);
+                    }
+                }
+                if (empty($passage['content'])) {
+                    $nums = array_column($questions, 'question_number');
+                    $min = min($nums);
+                    $max = max($nums);
+                    $passage['content'] = "Questions {$min} - {$max}:";
+                }
+                $isFirstQuestion = false;
+                $passages[] = $passage;
+            }
+            $partData['passages'] = $passages;
+        }
+        $parts[] = $partData;
+    }
+    $result = [
+        'title' => $title,
+        'duration' => $duration,
+        'parts' => $parts
+    ];
+    if (!empty($audioUrl)) {
+        $result['audio_url'] = $audioUrl;
+    }
+    return $result;
+}
+
+// parse answer html contents
+function helperParseAnswerHtml($htmlContent) {
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    if (!str_contains($htmlContent, '<?xml encoding=')) {
+        $htmlContent = '<?xml encoding="UTF-8">' . $htmlContent;
+    }
+    $doc->loadHTML($htmlContent);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    $titleNode = $doc->getElementsByTagName('title')->item(0);
+    $title = $titleNode ? trim($titleNode->textContent) : 'TOEIC Answers';
+    $answers = [];
+    $mcqNodes = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' mcq-wrapper ')]");
+    foreach ($mcqNodes as $s) {
+        $numNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' question-num ')]", $s);
+        $numText = '';
+        if ($numNodes->length > 0) {
+            $numText = rtrim(trim($numNodes->item(0)->textContent), '.');
+        }
+        $num = (int)$numText;
+        if ($num <= 0) continue;
+        $passageTrans = '';
+        $passageEng = '';
+        $passageAudio = '';
+        $parent = $s->parentNode;
+        $parentMCQG = null;
+        while ($parent) {
+            if ($parent instanceof DOMElement) {
+                $classes = explode(' ', $parent->getAttribute('class') ?? '');
+                if (in_array('mcqg-wrapper', $classes)) {
+                    $parentMCQG = $parent;
+                    break;
+                }
+            }
+            $parent = $parent->parentNode;
+        }
+        if ($parentMCQG) {
+            $viDivNode = $xpath->query("descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' reading-text-wrapper ') and contains(concat(' ', normalize-space(@class), ' '), ' text-vi ')]/div", $parentMCQG)->item(0);
+            if ($viDivNode) {
+                $passageTrans = getInnerHtmlNode($viDivNode);
+            }
+            $enDivNode = $xpath->query("descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' reading-text-wrapper ') and contains(concat(' ', normalize-space(@class), ' '), ' text-en ')]/div", $parentMCQG)->item(0);
+            if ($enDivNode) {
+                $passageEng = getInnerHtmlNode($enDivNode);
+            }
+            $pAudioNode = $xpath->query("descendant::audio//source", $parentMCQG)->item(0);
+            if ($pAudioNode) {
+                $src = $pAudioNode->getAttribute('src');
+                if ($src) {
+                    $passageAudio = trim($src);
+                    if (str_starts_with($passageAudio, '/')) {
+                        $passageAudio = 'https://tienganhmoingay.com' . $passageAudio;
+                    }
+                }
+            }
+        }
+        $questionAudio = '';
+        $qAudioNode = $xpath->query("descendant::audio//source", $s)->item(0);
+        if ($qAudioNode) {
+            $src = $qAudioNode->getAttribute('src');
+            if ($src) {
+                $questionAudio = trim($src);
+                if (str_starts_with($questionAudio, '/')) {
+                    $questionAudio = 'https://tienganhmoingay.com' . $questionAudio;
+                }
+            }
+        }
+        $correctLabel = '';
+        $optionAnswers = [];
+        $optNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' option ')]", $s);
+        foreach ($optNodes as $opt) {
+            if (!$opt instanceof DOMElement) continue;
+            $label = '';
+            foreach ($opt->childNodes as $child) {
+                if ($child->nodeType === XML_TEXT_NODE) {
+                    $text = trim($child->textContent);
+                    if (preg_match('/\(([A-D])\)/', $text, $matches)) {
+                        $label = $matches[1];
+                        break;
+                    } elseif (strlen($text) === 1 && $text >= 'A' && $text <= 'D') {
+                        $label = $text;
+                        break;
+                    }
+                }
+            }
+            if (empty($label)) continue;
+            $transNodes = $xpath->query("descendant::*[contains(concat(' ', normalize-space(@class), ' '), ' option-translation ')]", $opt);
+            $translation = '';
+            if ($transNodes->length > 0) {
+                $translation = trim($transNodes->item(0)->textContent);
+            }
+            $optionAnswers[] = [
+                'label' => $label,
+                'translation' => $translation
+            ];
+            $class = $opt->getAttribute('class') ?? '';
+            if (str_contains($class, 'correct-option')) {
+                $correctLabel = $label;
+            }
+        }
+        if (!empty($correctLabel)) {
+            $entry = [
+                'question_number' => $num,
+                'correct_answer' => $correctLabel
+            ];
+            if (!empty($passageTrans)) {
+                $entry['passage_translation'] = $passageTrans;
+            }
+            if (!empty($passageEng)) {
+                $entry['passage_english'] = $passageEng;
+            }
+            if (!empty($passageAudio)) {
+                $entry['passage_audio'] = $passageAudio;
+            }
+            if (!empty($questionAudio)) {
+                $entry['audio_url'] = $questionAudio;
+            }
+            $entry['options'] = $optionAnswers;
+            $answers[] = $entry;
+        }
+    }
+    return [
+        'exam_title' => $title,
+        'answers' => $answers
+    ];
+}
+
+// upload and parse zip/html exam files
+function importAdminTest() {
+    checkAdminAccess();
+    if (empty($_FILES['exam_file']['tmp_name']) || empty($_FILES['answer_file']['tmp_name'])) {
+        sendError("Vui lòng tải lên cả file đề thi và file đáp án", 400);
+    }
+    $examFile = $_FILES['exam_file']['tmp_name'];
+    $answerFile = $_FILES['answer_file']['tmp_name'];
+    $isPremium = isset($_POST['is_premium']) && ($_POST['is_premium'] === '1' || $_POST['is_premium'] === 'true') ? 1 : 0;
+    $mediaFile = $_FILES['media_file']['tmp_name'] ?? null;
+    $tempDir = __DIR__ . '/../../server/uploads/temp_import_' . uniqid();
+    if (!is_dir($tempDir)) {
+        mkdir($tempDir, 0777, true);
+    }
+    if ($mediaFile && is_uploaded_file($mediaFile)) {
+        $zip = new ZipArchive();
+        if ($zip->open($mediaFile) === true) {
+            $zip->extractTo($tempDir);
+            $zip->close();
+        }
+    }
+    try {
+        $examHtml = file_get_contents($examFile);
+        $answerHtml = file_get_contents($answerFile);
+        $examData = helperParseExamHtml($examHtml);
+        $answerData = helperParseAnswerHtml($answerHtml);
+        if (empty($examData['parts'])) {
+            throw new Exception("File đề thi không hợp lệ hoặc không có dữ liệu câu hỏi");
+        }
+        global $conn;
+        $testTitle = $examData['title'] ?? 'Đề thi thử mới';
+        $slug = helperSlugify($testTitle);
+        $targetImageDir = __DIR__ . '/../../server/uploads/image/' . $slug;
+        if (!is_dir($targetImageDir)) {
+            mkdir($targetImageDir, 0777, true);
+        }
+        $copyImage = function($imgName, $newBaseName) use ($slug, $targetImageDir, $tempDir) {
+            if (empty($imgName)) return null;
+            $ext = pathinfo($imgName, PATHINFO_EXTENSION);
+            $newFileName = $newBaseName . '.' . $ext;
+            $sourceFile = findFileInDirRecursive($tempDir, $imgName);
+            if ($sourceFile && file_exists($sourceFile)) {
+                copy($sourceFile, $targetImageDir . '/' . $newFileName);
+            }
+            return "/server/uploads/image/" . $slug . "/" . $newFileName;
+        };
+        $conn->beginTransaction();
+        $stmt = $conn->prepare("INSERT INTO tests (uuid, title, description, duration, audio_url, is_premium, is_active) VALUES (UUID(), :title, :desc, :duration, :audio_url, :is_premium, 0)");
+        $stmt->execute([
+            'title' => $testTitle,
+            'desc' => 'Đề thi import tự động, ở trạng thái chờ duyệt',
+            'duration' => $examData['duration'] ?? 7200,
+            'audio_url' => (!empty($examData['audio_url'])) ? "/server/uploads/audio/" . $examData['audio_url'] : null,
+            'is_premium' => $isPremium
+        ]);
+        $testId = $conn->lastInsertId();
+        foreach ($examData['parts'] as $part) {
+            $partNumber = $part['part_number'] ?? 1;
+            if (isset($part['questions']) && is_array($part['questions'])) {
+                foreach ($part['questions'] as $q) {
+                    $stmtQ = $conn->prepare("INSERT INTO questions (test_id, part, question_number, content, image_url, audio_url, correct_answer) VALUES (:test_id, :part, :question_number, :content, :image_url, :audio_url, :correct_answer)");
+                    $stmtQ->execute([
+                        'test_id' => $testId,
+                        'part' => $partNumber,
+                        'question_number' => $q['question_number'],
+                        'content' => $q['content'] ?: null,
+                        'image_url' => $copyImage($q['image_url'] ?? null, 'question_' . $q['question_number']),
+                        'audio_url' => (!empty($q['audio_url'])) ? "/server/uploads/audio/" . $q['audio_url'] : null,
+                        'correct_answer' => $q['correct_answer'] ?? 'A'
+                    ]);
+                    $questionId = $conn->lastInsertId();
+                    if (isset($q['options']) && is_array($q['options'])) {
+                        $stmtOpt = $conn->prepare("INSERT INTO options (question_id, label, content) VALUES (:question_id, :label, :content)");
+                        foreach ($q['options'] as $opt) {
+                            $stmtOpt->execute([
+                                'question_id' => $questionId,
+                                'label' => $opt['label'],
+                                'content' => $opt['content'] ?? ''
+                            ]);
+                        }
+                    }
+                }
+            }
+            if (isset($part['passages']) && is_array($part['passages'])) {
+                foreach ($part['passages'] as $passage) {
+                    $newBaseName = 'passage';
+                    if (!empty($passage['questions'])) {
+                        $nums = array_column($passage['questions'], 'question_number');
+                        if (!empty($nums)) {
+                            $newBaseName = 'question_' . min($nums) . '_' . max($nums);
+                        }
+                    }
+                    $stmtPass = $conn->prepare("INSERT INTO passages (test_id, content, image_url, audio_url) VALUES (:test_id, :content, :image_url, :audio_url)");
+                    $stmtPass->execute([
+                        'test_id' => $testId,
+                        'content' => $passage['content'] ?: null,
+                        'image_url' => $copyImage($passage['image_url'] ?? null, $newBaseName),
+                        'audio_url' => (!empty($passage['audio_url'])) ? "/server/uploads/audio/" . $passage['audio_url'] : null
+                    ]);
+                    $passageId = $conn->lastInsertId();
+                    if (isset($passage['questions']) && is_array($passage['questions'])) {
+                        foreach ($passage['questions'] as $q) {
+                            $stmtQ = $conn->prepare("INSERT INTO questions (test_id, passage_id, part, question_number, content, image_url, audio_url, correct_answer) VALUES (:test_id, :passage_id, :part, :question_number, :content, :image_url, :audio_url, :correct_answer)");
+                            $stmtQ->execute([
+                                'test_id' => $testId,
+                                'passage_id' => $passageId,
+                                'part' => $partNumber,
+                                'question_number' => $q['question_number'],
+                                'content' => $q['content'] ?: null,
+                                'image_url' => $copyImage($q['image_url'] ?? null, 'question_' . $q['question_number']),
+                                'audio_url' => (!empty($q['audio_url'])) ? "/server/uploads/audio/" . $q['audio_url'] : null,
+                                'correct_answer' => $q['correct_answer'] ?? 'A'
+                            ]);
+                            $questionId = $conn->lastInsertId();
+                            if (isset($q['options']) && is_array($q['options'])) {
+                                $stmtOpt = $conn->prepare("INSERT INTO options (question_id, label, content) VALUES (:question_id, :label, :content)");
+                                foreach ($q['options'] as $opt) {
+                                    $stmtOpt->execute([
+                                        'question_id' => $questionId,
+                                        'label' => $opt['label'],
+                                        'content' => $opt['content'] ?? ''
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!empty($answerData['answers'])) {
+            $stmtUpdate = $conn->prepare("UPDATE questions SET correct_answer = ? WHERE test_id = ? AND question_number = ?");
+            $stmtCheck = $conn->prepare("SELECT id FROM questions WHERE test_id = ? AND question_number = ? LIMIT 1");
+            $stmtTranslation = $conn->prepare("UPDATE options SET translation = ? WHERE question_id = ? AND label = ?");
+            $stmtPassageId = $conn->prepare("SELECT passage_id FROM questions WHERE id = ? LIMIT 1");
+            $stmtUpdatePassage = $conn->prepare("UPDATE passages SET translation = ? WHERE id = ?");
+            $stmtUpdatePassageEn = $conn->prepare("UPDATE passages SET translation_en = ? WHERE id = ?");
+            $stmtUpdateQuestionAudio = $conn->prepare("UPDATE questions SET audio_url = ? WHERE id = ?");
+            $stmtUpdatePassageAudio = $conn->prepare("UPDATE passages SET audio_url = ? WHERE id = ?");
+            foreach ($answerData['answers'] as $entry) {
+                $num = (int)$entry['question_number'];
+                $answer = strtoupper(trim($entry['correct_answer']));
+                if (!in_array($answer, ['A', 'B', 'C', 'D'])) continue;
+                $stmtCheck->execute([$testId, $num]);
+                $qRow = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$qRow) continue;
+                $questionId = $qRow['id'];
+                $stmtUpdate->execute([$answer, $testId, $num]);
+                if (!empty($entry['options'])) {
+                    foreach ($entry['options'] as $opt) {
+                        $label = strtoupper(trim($opt['label']));
+                        $translation = trim($opt['translation'] ?? '');
+                        if ($label && $translation) {
+                            $stmtTranslation->execute([$translation, $questionId, $label]);
+                        }
+                    }
+                }
+                $qAudio = trim($entry['audio_url'] ?? '');
+                if ($qAudio) {
+                    $stmtUpdateQuestionAudio->execute([$qAudio, $questionId]);
+                }
+                $passageTrans = trim($entry['passage_translation'] ?? '');
+                $passageEng = trim($entry['passage_english'] ?? '');
+                $passageAudio = trim($entry['passage_audio'] ?? '');
+                if ($passageTrans || $passageEng || $passageAudio) {
+                    $stmtPassageId->execute([$questionId]);
+                    $pRow = $stmtPassageId->fetch(PDO::FETCH_ASSOC);
+                    if ($pRow && $pRow['passage_id']) {
+                        if ($passageTrans) {
+                            $stmtUpdatePassage->execute([$passageTrans, $pRow['passage_id']]);
+                        }
+                        if ($passageEng) {
+                            $stmtUpdatePassageEn->execute([$passageEng, $pRow['passage_id']]);
+                        }
+                        if ($passageAudio) {
+                            $stmtUpdatePassageAudio->execute([$passageAudio, $pRow['passage_id']]);
+                        }
+                    }
+                }
+            }
+        }
+        $conn->commit();
+        helperRemoveDir($tempDir);
+        sendJson([
+            'success' => true,
+            'message' => 'Đề thi đã được import thành công ở chế độ chờ duyệt',
+            'test_id' => $testId
+        ]);
+    } catch (Exception $e) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        helperRemoveDir($tempDir);
+        sendError("Lỗi khi import đề thi: " . $e->getMessage(), 500);
+    }
+}
+
+// approve/activate draft test
+function activateAdminTest($uuid) {
+    global $conn;
+    checkAdminAccess();
+    try {
+        $stmt = $conn->prepare("UPDATE tests SET is_active = 1, description = NULL WHERE uuid = ?");
+        $stmt->execute([$uuid]);
+        if ($stmt->rowCount() > 0) {
+            sendJson([
+                'success' => true,
+                'message' => 'Đề thi đã được duyệt và hoạt động thành công'
+            ]);
+        } else {
+            sendError("Không tìm thấy đề thi hoặc đề đã được kích hoạt trước đó", 404);
+        }
+    } catch (PDOException $e) {
+        sendError("Lỗi database: " . $e->getMessage(), 500);
+    }
+}
+

@@ -58,6 +58,27 @@ switch ($sub_resource) {
         }
         break;
 
+    case 'import':
+        if ($method === 'POST') {
+            importAdminTest();
+        } else {
+            sendError("Phương thức không được hỗ trợ", 405);
+        }
+        break;
+
+    case 'tests':
+        if ($method === 'PUT') {
+            $uuid = $parts[2] ?? '';
+            $action = $parts[3] ?? '';
+            if (empty($uuid) || $action !== 'activate') {
+                sendError("Endpoint không hợp lệ", 400);
+            }
+            activateAdminTest($uuid);
+        } else {
+            sendError("Phương thức không được hỗ trợ", 405);
+        }
+        break;
+
     default:
         sendError("Admin API endpoint not found", 404);
         break;
