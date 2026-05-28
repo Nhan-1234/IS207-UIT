@@ -179,10 +179,15 @@ function renderTestsTable(tests) {
         row.innerHTML = `
             <td><strong>${test.title}</strong></td>
             <td><span class="badge ${isPremium ? 'premium' : 'standard'}">${isPremium ? 'Premium' : 'Thường'}</span></td>
-            <td><span class="badge ${isActive ? 'active' : 'inactive'}">${isActive ? 'Hoạt động' : 'Tạm ẩn'}</span></td>
+            <td><span class="badge ${isActive ? 'active' : 'warning'}">${isActive ? 'Hoạt động' : 'Chờ duyệt'}</span></td>
             <td>${formatDate(test.created_at)}</td>
             <td style="text-align: right;">
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    ${!isActive ? `
+                        <button class="btn-primary approve-test-btn" style="padding: 6px 12px; font-size: 12px; background-color: var(--accent-green);" data-uuid="${test.uuid}">
+                            Duyệt
+                        </button>
+                    ` : ''}
                     <a href="admin.php?section=tests&action=edit&test_id=${test.uuid}" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">
                         <i class="bx bx-edit-alt"></i> Câu hỏi
                     </a>
@@ -219,6 +224,33 @@ function renderTestsTable(tests) {
             deleteTest(uuid);
         });
     });
+
+    document.querySelectorAll('.approve-test-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const uuid = e.target.dataset.uuid;
+            approveTest(uuid);
+        });
+    });
+}
+
+// phê duyệt và kích hoạt đề thi
+async function approveTest(uuid) {
+    if (!confirm('Bạn có chắc chắn muốn duyệt và kích hoạt đề thi này?')) return;
+    try {
+        const response = await fetch(`/api/admin/tests/${uuid}/activate`, {
+            method: 'PUT'
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('Duyệt đề thi thành công');
+            loadTestsList();
+        } else {
+            alert('Lỗi: ' + result.message);
+        }
+    } catch (error) {
+        console.error('error approving test:', error);
+        alert('Có lỗi xảy ra khi phê duyệt đề');
+    }
 }
 
 // mở modal chỉnh sửa nhanh
@@ -778,4 +810,82 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterUsersRole) filterUsersRole.addEventListener('change', handleUsersFilterChange);
     if (filterUsersStatus) filterUsersStatus.addEventListener('change', handleUsersFilterChange);
 
+    // thiết lập modal import đề thi
+    const openImportModalBtn = document.getElementById('openImportModalBtn');
+    const importModal = document.getElementById('importModal');
+    const closeImportModalBtn = document.getElementById('closeImportModalBtn');
+    const cancelImportModalBtn = document.getElementById('cancelImportModalBtn');
+    const importForm = document.getElementById('importForm');
+    const importLoading = document.getElementById('importLoading');
+    const importMessage = document.getElementById('importMessage');
+
+    const openImportModal = () => {
+        if (importModal) {
+            importModal.classList.add('show');
+            if (importForm) importForm.reset();
+            if (importMessage) {
+                importMessage.style.display = 'none';
+                importMessage.className = 'import-message-box';
+                importMessage.textContent = '';
+            }
+            if (importLoading) importLoading.style.display = 'none';
+        }
+    };
+
+    const closeImportModal = () => {
+        if (importModal) importModal.classList.remove('show');
+    };
+
+    if (openImportModalBtn) openImportModalBtn.addEventListener('click', openImportModal);
+    if (closeImportModalBtn) closeImportModalBtn.addEventListener('click', closeImportModal);
+    if (cancelImportModalBtn) cancelImportModalBtn.addEventListener('click', closeImportModal);
+    if (importModal) {
+        importModal.addEventListener('click', (e) => {
+            if (e.target === importModal) closeImportModal();
+        });
+    }
+
+    if (importForm) {
+        importForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (importLoading) importLoading.style.display = 'block';
+            if (importMessage) importMessage.style.display = 'none';
+
+            const formData = new FormData(importForm);
+
+            try {
+                const response = await fetch('/api/admin/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (importLoading) importLoading.style.display = 'none';
+                
+                if (importMessage) {
+                    importMessage.style.display = 'block';
+                    if (result.success) {
+                        importMessage.className = 'import-message-box success';
+                        importMessage.textContent = result.message || 'Import đề thi thành công';
+                        importForm.reset();
+                        await loadTestsList();
+                        // đóng modal sau 2 giây thành công
+                        setTimeout(closeImportModal, 2000);
+                    } else {
+                        importMessage.className = 'import-message-box error';
+                        importMessage.textContent = result.message || 'Có lỗi xảy ra khi import đề thi';
+                    }
+                }
+            } catch (error) {
+                console.error('error importing exam:', error);
+                if (importLoading) importLoading.style.display = 'none';
+                if (importMessage) {
+                    importMessage.style.display = 'block';
+                    importMessage.className = 'import-message-box error';
+                    importMessage.textContent = 'Lỗi kết nối máy chủ hoặc quá tải dung lượng file';
+                }
+            }
+        });
+    }
 });
