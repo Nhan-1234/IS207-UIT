@@ -42,7 +42,6 @@ async function fetchExamData() {
         
         setupExamAudio(questions);
         renderQuestions(questions);
-        renderPartNav(questions);
         document.getElementById("exam-title").innerHTML = questions_lists.data.title;  
         renderSidebar(questions); 
         
@@ -66,6 +65,20 @@ function setupExamAudio(questions) {
     const playBtn = document.getElementById('custom-play-btn');
     const statusText = document.getElementById('audio-status');
     if (!audioEl || !playBtn || !Array.isArray(questions)) return;
+
+    // kiểm tra xem đây có phải đề reading thuần hay không
+    const isReadingOnly = questions.every(q => parseInt(q.part) >= 5);
+    if (isReadingOnly) {
+        const stickyAudio = document.querySelector('.sticky-audio');
+        if (stickyAudio) {
+            stickyAudio.style.display = 'none';
+        }
+        const warningBox = document.getElementById('listening-intro-warning');
+        if (warningBox) {
+            warningBox.style.display = 'none';
+        }
+        return;
+    }
 
     // Tìm URL audio đầu tiên xuất hiện trong đề
     const firstAudioUrl = questions.reduce((foundUrl, q) => {
@@ -92,9 +105,22 @@ function setupExamAudio(questions) {
 
 function scrollToQuestionTarget(targetEl) {
     if (!targetEl) return;
+    
+    // nếu là câu hỏi, kiểm tra xem có phải câu đầu tiên trong part không để cuộn về đầu part
+    let elementToScroll = targetEl;
+    if (targetEl.id && targetEl.id.startsWith('question-')) {
+        const partSection = targetEl.closest('.part-section');
+        if (partSection) {
+            const firstQuestion = partSection.querySelector('.d-flex[id^="question-"]');
+            if (firstQuestion && firstQuestion.id === targetEl.id) {
+                elementToScroll = partSection;
+            }
+        }
+    }
+    
     const headerHeight = document.querySelector('.top-header')?.offsetHeight || 0;
     const audioHeight = document.querySelector('.sticky-audio')?.offsetHeight || 0;
-    const targetTop = window.scrollY + targetEl.getBoundingClientRect().top;
+    const targetTop = window.scrollY + elementToScroll.getBoundingClientRect().top;
 
     window.scrollTo({
         top: Math.max(0, targetTop - headerHeight - audioHeight - 16),
@@ -103,31 +129,7 @@ function scrollToQuestionTarget(targetEl) {
 }
 
 
-function renderPartNav(questions) {
-    const partTabsContainer = document.getElementById('part-tabs-container');
-    if (!partTabsContainer || !Array.isArray(questions)) return;
 
-    const firstQuestionByPart = {};
-    questions.forEach(q => {
-        if (!firstQuestionByPart[q.part]) firstQuestionByPart[q.part] = q.question_number;
-    });
-
-    const parts = Object.keys(firstQuestionByPart).map(Number).sort((a, b) => a - b);
-
-    partTabsContainer.innerHTML = parts.map((part, index) => `
-        <li class="nav-item">
-            <a class="nav-link${index === 0 ? ' active' : ''}" href="#question-${firstQuestionByPart[part]}">Part ${part}</a>
-        </li>
-    `).join('');
-
-    partTabsContainer.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetEl = document.getElementById(this.getAttribute('href').slice(1));
-            if (targetEl) scrollToQuestionTarget(targetEl);
-        });
-    });
-}
 
 
 function renderQuestions(questions) {
@@ -138,7 +140,10 @@ function renderQuestions(questions) {
         1: "For each question in this part, you will hear four statements about a picture in your test book. When you hear the statements, you must select the one statement that best describes what you see in the picture. Then find the number of the question on your answer sheet and mark your answer. The statements will not be printed in your test book and will be spoken only one time.",
         2: "You will hear a question or statement and three responses spoken in English. They will not be printed in your test book and will be spoken only one time. Select the best response to the question or statement and mark the letter (A), (B), or (C) on your answer sheet.",
         3: "You will hear some conversations between two or more people. You will be asked to answer three questions about what the speakers say in each conversation. Select the best response to each question and mark the letter (A), (B), (C), or (D) on your answer sheet. The conversations will not be printed in your test book and will be spoken only one time.",
-        4: "You will hear some talks given by a single speaker. You will be asked to answer three questions about what the speaker says in each talk. Select the best response to each question and mark the letter (A), (B), (C), or (D) on your answer sheet. The talks will not be printed in your test book and will be spoken only one time."
+        4: "You will hear some talks given by a single speaker. You will be asked to answer three questions about what the speaker says in each talk. Select the best response to each question and mark the letter (A), (B), (C), or (D) on your answer sheet. The talks will not be printed in your test book and will be spoken only one time.",
+        5: "A word or phrase is missing in each of the sentences below. Four answer choices are given below each sentence. Select the best answer to complete the sentence. Then mark the letter (A), (B), (C), or (D) on your answer sheet.",
+        6: "Read the texts that follow. A word, phrase, or sentence is missing in some of the sentences. Four answer choices for each question are given below each text. Select the best answer to complete the sentence or text. Then mark the letter (A), (B), (C), or (D) on your answer sheet.",
+        7: "In this part you will read a selection of texts, such as magazine and newspaper articles, letters, and advertisements. Each text is followed by several questions. Select the best answer for each question and mark the letter (A), (B), (C), or (D) on your answer sheet."
     };
 
     // gom nhóm câu hỏi theo part
@@ -154,6 +159,19 @@ function renderQuestions(questions) {
     const parts = Object.keys(questionsByPart).map(Number).sort((a, b) => a - b);
 
     parts.forEach(part => {
+        if (part === 5) {
+            htmlContent += `
+                <div id="reading-intro-warning" class="mb-5"
+                    style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px;">
+                    <p class="mb-0 text-dark" style="font-size: 0.9rem; line-height: 1.5; font-weight: 500;">
+                        In the Reading test, you will read a variety of texts and answer several different types of reading comprehension questions.
+                        The entire Reading test will last 75 minutes. There are three parts, and directions are given for each part. You are
+                        encouraged to answer as many questions as possible within the time allowed. You must mark your answers on the
+                        separate answer sheet. Do not write your answers in the test book.
+                    </p>
+                </div>
+            `;
+        }
         htmlContent += `
             <div class="part-section mb-5" id="part-section-${part}">
                 <h3 class="part-header mb-2 text-uppercase fw-bold text-dark" style="font-size: 1.4rem; letter-spacing: 1px;">Part ${part}</h3>
@@ -169,9 +187,41 @@ function renderQuestions(questions) {
             if (q.paragraph && q.paragraph !== lastParagraph) {
                 const hasImage = !!q.passage_image;
                 const headerClass = hasImage ? 'passage-group-header grid-full-width mb-3' : 'passage-group-header grid-full-width no-image';
+                
+                const isPlaceholder = q.paragraph.trim().startsWith('Questions ') && !q.paragraph.includes('<');
+                let passageHtml = '';
+                
+                if (isPlaceholder) {
+                    passageHtml = `<p class="fw-bold mb-1 text-dark" style="font-size: 1rem;">${q.paragraph}</p>`;
+                } else {
+                    const passageQuestions = questionsByPart[part].filter(item => item.paragraph === q.paragraph);
+                    const nums = passageQuestions.map(item => parseInt(item.question_number)).filter(Number.isInteger);
+                    const min = Math.min(...nums);
+                    const max = Math.max(...nums);
+                    const rangeHeader = (Number.isInteger(min) && Number.isInteger(max))
+                        ? `<p class="fw-bold mb-1 text-dark" style="font-size: 1rem;">Questions ${min} - ${max}:</p>`
+                        : '';
+                    
+                    let titleHtml = '';
+                    let bodyHtml = q.paragraph;
+                    const headerMatch = q.paragraph.match(/^(\s*<h[1-6]>.*?<\/h[1-6]>)(.*)$/is);
+                    if (headerMatch) {
+                        titleHtml = headerMatch[1];
+                        bodyHtml = headerMatch[2];
+                    }
+                    
+                    passageHtml = `
+                        ${rangeHeader}
+                        ${titleHtml}
+                        <div class="passage-text-card">
+                            ${bodyHtml}
+                        </div>
+                    `;
+                }
+
                 htmlContent += `
                     <div class="${headerClass}">
-                        <p class="fw-bold mb-1 text-dark" style="font-size: 1rem;">${q.paragraph}</p>
+                        ${passageHtml}
                 `;
                 if (hasImage) {
                     htmlContent += `

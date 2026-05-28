@@ -66,7 +66,7 @@ if (!isset($_GET['uuid'])) {
 
 					<div class="p-4">
 						<div id="listening-intro-warning"
-							style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+							style="display: none; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
 							<p class="mb-2 text-dark" style="font-size: 0.9rem; line-height: 1.5; font-weight: 500;">
 								In the Listening test, you will be asked to demonstrate how well you understand spoken
 								English. The entire Listening test will last approximately 45 minutes. There are four
@@ -77,9 +77,6 @@ if (!isset($_GET['uuid'])) {
 								&#9888; Once you press play, the audio cannot be paused or stopped!
 							</p>
 						</div>
-
-						<!--Nav link để hiển thị các part trong đề thi-->
-						<ul class="nav part-tabs mb-4 border-bottom pb-3" id="part-tabs-container"></ul>
 						<!--Đây là chỗ gọi api từ db lên để hiện các câu hỏi trong đề thi.-->
 						<div id="question-list-container"></div>
 					</div>
