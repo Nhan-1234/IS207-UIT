@@ -3,13 +3,13 @@ const ATTEMPT_ID = urlParams.get('attempt_id');
 const API_URL = `/api/score?attempt_id=${ATTEMPT_ID}`;
 
 const TOEIC_PARTS = [
-    { name: "Part 1: Ảnh",              range: [1, 6] },
-    { name: "Part 2: Câu hỏi ngắn",     range: [7, 31] },
-    { name: "Part 3: Hội thoại",         range: [32, 70] },
-    { name: "Part 4: Độc thoại",         range: [71, 100] },
-    { name: "Part 5: Đọc câu hoàn chỉnh", range: [101, 130] },
-    { name: "Part 6: Điền từ",           range: [131, 146] },
-    { name: "Part 7: Đọc hiểu",          range: [147, 200] }
+    { id: 1, name: "Part 1: Ảnh" },
+    { id: 2, name: "Part 2: Câu hỏi ngắn" },
+    { id: 3, name: "Part 3: Hội thoại" },
+    { id: 4, name: "Part 4: Độc thoại" },
+    { id: 5, name: "Part 5: Đọc câu hoàn chỉnh" },
+    { id: 6, name: "Part 6: Điền từ" },
+    { id: 7, name: "Part 7: Đọc hiểu" }
 ];
 
 $(document).ready(async function () {
@@ -29,7 +29,7 @@ $(document).ready(async function () {
         $('#wrong-questions-list').html('<div class="p-5 text-center text-danger">Lỗi kết nối máy chủ. Thử lại sau.</div>');
     }
 
-    // filter toggle – event delegation so it works after dynamic render
+    // toggle lọc – dùng event delegation để hoạt động sau khi render động
     $(document).on('click', '#filter-all', function () {
         $('#filter-all').addClass('active');
         $('#filter-wrong').removeClass('active');
@@ -40,7 +40,7 @@ $(document).ready(async function () {
         $('#filter-wrong').addClass('active');
         $('#filter-all').removeClass('active');
         $('.question-item').each(function () {
-            // data-correct="1" means correct → hide; "" means wrong → show
+            // data-correct="1" là đúng → ẩn; "" là sai → hiện
             $(this).attr('data-correct') === '1' ? $(this).hide() : $(this).show();
         });
     });
@@ -64,7 +64,8 @@ function renderResults(summary, questions) {
     if (summary.test_uuid) $('#btn-retake').attr('href', `exam.php?uuid=${summary.test_uuid}`);
 
     const total = parseInt(summary.listening_correct) + parseInt(summary.reading_correct);
-    $('#accuracy-rate').text(((total / 200) * 100).toFixed(1) + '%');
+    const totalQuestions = questions.length || 200;
+    $('#accuracy-rate').text(((total / totalQuestions) * 100).toFixed(1) + '%');
 
     questions.forEach(q => {
         q.user_choice    = q.user_choice    ? q.user_choice.toUpperCase()    : '';
@@ -80,10 +81,10 @@ function renderReviewList(questions) {
     let html = '';
 
     TOEIC_PARTS.forEach(part => {
-        const partQuestions = questions.filter(q => q.question_number >= part.range[0] && q.question_number <= part.range[1]);
+        const partQuestions = questions.filter(q => parseInt(q.part) === part.id);
         if (!partQuestions.length) return;
 
-        // part heading
+        // tiêu đề từng part
         html += `
         <div class="part-section-header">${part.name}</div>
         <div class="review-questions-grid p-3">
@@ -147,9 +148,40 @@ function renderReviewList(questions) {
                 if (item.passage_audio) {
                     passageAudioHtml = `<audio controls src="${item.passage_audio}" class="mt-2" style="max-width: 320px; display: block;"></audio>`;
                 }
+                const isPlaceholder = item.paragraph.trim().startsWith('Questions ') && !item.paragraph.includes('<');
+                let passageHtml = '';
+                
+                if (isPlaceholder) {
+                    passageHtml = `<span class="fw-bold text-dark" style="font-size: 0.95rem;">${item.paragraph}</span>`;
+                } else {
+                    const passageQuestions = partQuestions.filter(q => q.paragraph === item.paragraph);
+                    const nums = passageQuestions.map(q => parseInt(q.question_number)).filter(Number.isInteger);
+                    const min = Math.min(...nums);
+                    const max = Math.max(...nums);
+                    const rangeHeader = (Number.isInteger(min) && Number.isInteger(max))
+                        ? `<span class="fw-bold text-dark d-block mb-1" style="font-size: 0.95rem;">Questions ${min} - ${max}:</span>`
+                        : '';
+
+                    let titleHtml = '';
+                    let bodyHtml = item.paragraph;
+                    const headerMatch = item.paragraph.match(/^(\s*<h[1-6]>.*?<\/h[1-6]>)(.*)$/is);
+                    if (headerMatch) {
+                        titleHtml = headerMatch[1];
+                        bodyHtml = headerMatch[2];
+                    }
+
+                    passageHtml = `
+                        ${rangeHeader}
+                        ${titleHtml}
+                        <div class="passage-text-card">
+                            ${bodyHtml}
+                        </div>
+                    `;
+                }
+
                 html += `
                     <div class="${headerClass}">
-                        <span class="fw-bold text-dark" style="font-size: 0.95rem;">${item.paragraph}</span>
+                        ${passageHtml}
                         ${passageImgHtml}
                         ${passageAudioHtml}
                         ${passageTransHtml}
@@ -168,7 +200,7 @@ function renderReviewList(questions) {
             const contentHtml = displayContent || (mediaHtml ? '' : '<i style="color:#94a3b8;">Nội dung không khả dụng.</i>');
             
             // tạo các lựa chọn A, B, C, D kèm nội dung chi tiết
-            const numOptions = (item.question_number >= 7 && item.question_number <= 31) ? 3 : 4;
+            const numOptions = parseInt(item.part) === 2 ? 3 : 4;
             const optionsList = ['A', 'B', 'C', 'D'].slice(0, numOptions);
             let optionsHtml = '';
             
@@ -239,7 +271,7 @@ function renderReviewList(questions) {
 function renderAnswerGrid(questions) {
     let html = '';
     TOEIC_PARTS.forEach(part => {
-        const pq = questions.filter(q => q.question_number >= part.range[0] && q.question_number <= part.range[1]);
+        const pq = questions.filter(q => parseInt(q.part) === part.id);
         if (!pq.length) return;
         html += `<div class="part-label">${part.name}</div><div style="display:flex;flex-wrap:wrap;">`;
         pq.forEach(item => {
