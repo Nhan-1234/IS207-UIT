@@ -1,6 +1,6 @@
 body {
 	background-color: #f8f9fa;
-	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+	font-family: 'Inter', "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* --- Header --- */
@@ -14,7 +14,7 @@ body {
 }
 
 .btn.submit-btn{
-	background-color: #4b63b6 !important;
+	background-color: #05102b !important;
 	color: #fff !important;
 	border: none !important;
 	border-radius: 12px !important;
@@ -24,9 +24,29 @@ body {
 }
 
 .btn.submit-btn:hover{
-	background-color: #4057a8 !important;
+	background-color: #0e2050 !important;
 	color: #fff !important;
 	border: none !important;
+}
+
+/* kiểu cho các nút chính */
+.btn-primary {
+	background-color: #05102b !important;
+	border-color: #05102b !important;
+	color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+	background-color: #0e2050 !important;
+	border-color: #0e2050 !important;
+	color: #fff !important;
+}
+
+/* kiểu cho chữ chính */
+.text-primary {
+	color: #05102b !important;
 }
 /* --- Cột Trái: Nội dung thi --- */
 .main-content {
@@ -36,12 +56,9 @@ body {
 	min-height: 80vh;
 }
 
-/* Audio Player dính chặt ở trên */
+/* Audio Player cuộn cùng trang */
 .sticky-audio {
-	position: sticky;
-	top: 56px;
 	background: white;
-	z-index: 1050;
 	padding: 15px 20px;
 	border-bottom: 1px solid #e0e0e0;
 }
@@ -80,6 +97,13 @@ audio {
 	justify-content: center;
 	flex-shrink: 0;
 }
+.question-text,
+.form-check-label,
+.form-check-label .text-secondary {
+	font-weight: 400 !important;
+	color: #6c757d !important;
+}
+
 .form-check-label {
 	cursor: pointer;
 }
@@ -135,4 +159,33 @@ audio {
 .sidebar::-webkit-scrollbar-thumb {
 	background-color: #ccc;
 	border-radius: 10px;
+}
+
+/* bố cục lưới cho câu hỏi toeic */
+.questions-grid-container {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 30px 40px;
+}
+
+.grid-full-width {
+	grid-column: span 2;
+}
+
+/* căn giữa hình ảnh của đoạn văn */
+.passage-image {
+	display: block;
+	margin: 15px auto;
+	max-width: 100%;
+	height: auto;
+	border-radius: 0 !important;
+}
+
+img {
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.passage-group-header.no-image {
+	margin-bottom: -15px !important;
 }

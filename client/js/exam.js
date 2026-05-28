@@ -84,6 +84,9 @@ function setupExamAudio(questions) {
 
     audioEl.src = firstAudioUrl;
     audioEl.load();
+
+    const warningBox = document.getElementById('listening-intro-warning');
+    if (warningBox) warningBox.style.display = 'block';
 }
 
 
@@ -131,34 +134,95 @@ function renderQuestions(questions) {
     const container = document.getElementById('question-list-container');
     if (!container || !questions) return;
 
-    let htmlContent = '';
+    const partDirections = {
+        1: "For each question in this part, you will hear four statements about a picture in your test book. When you hear the statements, you must select the one statement that best describes what you see in the picture. Then find the number of the question on your answer sheet and mark your answer. The statements will not be printed in your test book and will be spoken only one time.",
+        2: "You will hear a question or statement and three responses spoken in English. They will not be printed in your test book and will be spoken only one time. Select the best response to the question or statement and mark the letter (A), (B), or (C) on your answer sheet.",
+        3: "You will hear some conversations between two or more people. You will be asked to answer three questions about what the speakers say in each conversation. Select the best response to each question and mark the letter (A), (B), (C), or (D) on your answer sheet. The conversations will not be printed in your test book and will be spoken only one time.",
+        4: "You will hear some talks given by a single speaker. You will be asked to answer three questions about what the speaker says in each talk. Select the best response to each question and mark the letter (A), (B), (C), or (D) on your answer sheet. The talks will not be printed in your test book and will be spoken only one time."
+    };
+
+    // gom nhóm câu hỏi theo part
+    const questionsByPart = {};
     questions.forEach(q => {
-        let imageHtml = q.image_url ? `<img src="${q.image_url}" class="img-fluid mb-3 rounded shadow-sm" style="max-height: 250px;">` : '';
-        let paragraphHtml = q.paragraph ? `<div class="p-3 bg-light border rounded mb-3">${q.paragraph.replace(/\n/g, '<br>')}</div>` : '';
-        let optionsHtml = '';
-        
-        q.options.forEach(opt => {
-            optionsHtml += `
-                <div class="form-check mb-1">
-                    <input class="form-check-input" type="radio" name="q${q.question_number}" data-q-id="${q.id}" id="q${q.question_number}_${opt.label}" value="${opt.label}">
-                    <label class="form-check-label" for="q${q.question_number}_${opt.label}">
-                        <span class="fw-bold">${opt.label}.</span> ${opt.content}
-                    </label>
+        if (!questionsByPart[q.part]) {
+            questionsByPart[q.part] = [];
+        }
+        questionsByPart[q.part].push(q);
+    });
+
+    let htmlContent = '';
+    const parts = Object.keys(questionsByPart).map(Number).sort((a, b) => a - b);
+
+    parts.forEach(part => {
+        htmlContent += `
+            <div class="part-section mb-5" id="part-section-${part}">
+                <h3 class="part-header mb-2 text-uppercase fw-bold text-dark" style="font-size: 1.4rem; letter-spacing: 1px;">Part ${part}</h3>
+                <div class="part-directions mb-4" style="font-size: 0.9rem; line-height: 1.5; text-align: justify; color: #212529;">
+                    <strong>Directions:</strong> ${partDirections[part] || ''}
+                </div>
+                <div class="questions-grid-container">`;
+
+        let lastParagraph = '';
+
+        questionsByPart[part].forEach(q => {
+            // kiểm tra và hiển thị tiêu đề/hình ảnh đoạn văn nếu sang nhóm mới
+            if (q.paragraph && q.paragraph !== lastParagraph) {
+                const hasImage = !!q.passage_image;
+                const headerClass = hasImage ? 'passage-group-header grid-full-width mb-3' : 'passage-group-header grid-full-width no-image';
+                htmlContent += `
+                    <div class="${headerClass}">
+                        <p class="fw-bold mb-1 text-dark" style="font-size: 1rem;">${q.paragraph}</p>
+                `;
+                if (hasImage) {
+                    htmlContent += `
+                        <img src="${q.passage_image}" class="passage-image img-fluid mb-3" style="max-height: 350px;">
+                    `;
+                }
+                htmlContent += `</div>`;
+                lastParagraph = q.paragraph;
+            } else if (!q.paragraph) {
+                lastParagraph = '';
+            }
+
+            let imageHtml = q.image_url ? `<img src="${q.image_url}" class="img-fluid mb-3" style="max-height: 250px; display: block;">` : '';
+            let optionsHtml = '';
+            
+            q.options.forEach(opt => {
+                const trimmed = opt.content.trim();
+                const isPlaceholder = trimmed === '' || 
+                                    trimmed.toUpperCase() === opt.label.toUpperCase() || 
+                                    trimmed.toUpperCase() === `(${opt.label.toUpperCase()})`;
+                const optContent = isPlaceholder ? '' : ' ' + opt.content;
+                optionsHtml += `
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="radio" name="q${q.question_number}" data-q-id="${q.id}" id="q${q.question_number}_${opt.label}" value="${opt.label}">
+                        <label class="form-check-label" for="q${q.question_number}_${opt.label}">
+                            <span class="text-secondary">(${opt.label})</span>${optContent}
+                        </label>
+                    </div>
+                `;
+            });
+
+            const displayContent = q.content || (q.part === 2 ? 'Mark your answer on your answer sheet.' : '');
+
+            htmlContent += `
+                <div class="d-flex mb-4" id="question-${q.question_number}">
+                    <div class="q-number me-3">${q.question_number}</div>
+                    <div class="grow">
+                        ${imageHtml}
+                        <p class="mb-2" style="font-size: 0.95rem; line-height: 1.4; color: #333;">${displayContent}</p>
+                        ${optionsHtml}
+                    </div>
                 </div>
             `;
         });
 
         htmlContent += `
-            <div class="d-flex mb-5" id="question-${q.question_number}">
-                <div class="q-number me-3">${q.question_number}</div>
-                <div class="flex-grow-1">
-                    ${imageHtml}${paragraphHtml}
-                    <p class="fw-bold mb-2">${q.content || ''}</p>
-                    ${optionsHtml}
                 </div>
             </div>
         `;
     });
+
     container.innerHTML = htmlContent;
 }
 

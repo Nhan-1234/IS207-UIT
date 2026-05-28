@@ -44,6 +44,16 @@ $(document).ready(async function () {
             $(this).attr('data-correct') === '1' ? $(this).hide() : $(this).show();
         });
     });
+
+    // tạm dừng các trình phát âm thanh khác khi bắt đầu phát một trình phát mới
+    document.addEventListener('play', function(e) {
+        const audios = document.getElementsByTagName('audio');
+        for (let i = 0; i < audios.length; i++) {
+            if (audios[i] !== e.target) {
+                audios[i].pause();
+            }
+        }
+    }, true);
 });
 
 function renderResults(summary, questions) {
@@ -74,38 +84,134 @@ function renderReviewList(questions) {
         if (!partQuestions.length) return;
 
         // part heading
-        html += `<div class="part-section-header">${part.name}</div>`;
+        html += `
+        <div class="part-section-header">${part.name}</div>
+        <div class="review-questions-grid p-3">
+        `;
+
+        let lastParagraph = '';
 
         partQuestions.forEach(item => {
             const ok = item.status;
-            let mediaHtml = '';
-            if (item.image_url) mediaHtml += `<img src="${item.image_url}" class="img-fluid rounded mt-2" style="max-height:280px;">`;
-            if (item.audio_url) mediaHtml += `<audio controls src="${item.audio_url}" class="w-100 mt-2"></audio>`;
-
-            const contentHtml = item.question_content || (mediaHtml ? '' : '<i style="color:#94a3b8;">Nội dung không khả dụng.</i>');
             
-            // Generate A, B, C, D options with full text
+            // hiển thị tiêu đề và hình ảnh đoạn văn nếu sang nhóm mới
+            if (item.paragraph && item.paragraph !== lastParagraph) {
+                const hasImage = !!item.passage_image;
+                const headerClass = hasImage ? 'passage-group-header mb-3 border-bottom pb-2 pt-2 px-3 bg-light rounded' : 'passage-group-header no-image mb-1 border-bottom pb-1 pt-1 px-3 bg-light rounded';
+                let passageImgHtml = '';
+                if (hasImage) {
+                    passageImgHtml = `<img src="${item.passage_image}" class="passage-image img-fluid mb-3" style="max-height: 350px; display: block; margin: 10px auto;">`;
+                }
+                let passageTransHtml = '';
+                if (item.passage_translation_en && item.passage_translation_en.trim() && item.passage_translation && item.passage_translation.trim()) {
+                    const uniqueId = `trans_p_${item.question_number}`;
+                    passageTransHtml = `
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#${uniqueId}" aria-expanded="false" style="font-size: 0.78rem; font-weight: 500;">
+                            <i class="bx bx-translate me-1"></i>Xem đoạn văn & Bản dịch
+                        </button>
+                        <div class="collapse mt-2" id="${uniqueId}">
+                            <div class="p-3 rounded text-dark" style="background-color: #f8fafc; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);">
+                                <div class="row">
+                                    <div class="col-md-6 border-end">
+                                        <strong style="color: #475569; display: block; margin-bottom: 8px;"><i class="bx bx-file me-1"></i>Reading text:</strong>
+                                        <div style="font-size: 0.88rem; line-height: 1.6; color: #334155;">
+                                            ${item.passage_translation_en.trim()}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong style="color: #2563eb; display: block; margin-bottom: 8px;"><i class="bx bx-globe me-1"></i>Dịch đoạn văn:</strong>
+                                        <div style="font-size: 0.88rem; line-height: 1.6; color: #334155;">
+                                            ${item.passage_translation.trim()}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else if (item.passage_translation && item.passage_translation.trim()) {
+                    const uniqueId = `trans_p_${item.question_number}`;
+                    passageTransHtml = `
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#${uniqueId}" aria-expanded="false" style="font-size: 0.78rem; font-weight: 500;">
+                            <i class="bx bx-translate me-1"></i>Dịch đoạn văn
+                        </button>
+                        <div class="collapse mt-2" id="${uniqueId}">
+                            <div class="p-3 rounded text-dark" style="background-color: #f1f5f9; font-size: 0.88rem; line-height: 1.5; border-left: 3px solid #3b82f6;">
+                                ${item.passage_translation.trim()}
+                            </div>
+                        </div>
+                    </div>`;
+                }
+                let passageAudioHtml = '';
+                if (item.passage_audio) {
+                    passageAudioHtml = `<audio controls src="${item.passage_audio}" class="mt-2" style="max-width: 320px; display: block;"></audio>`;
+                }
+                html += `
+                    <div class="${headerClass}">
+                        <span class="fw-bold text-dark" style="font-size: 0.95rem;">${item.paragraph}</span>
+                        ${passageImgHtml}
+                        ${passageAudioHtml}
+                        ${passageTransHtml}
+                    </div>
+                `;
+                lastParagraph = item.paragraph;
+            } else if (!item.paragraph) {
+                lastParagraph = '';
+            }
+
+            let mediaHtml = '';
+            if (item.image_url) mediaHtml += `<img src="${item.image_url}" class="img-fluid mt-2" style="max-height:280px;">`;
+            if (item.audio_url) mediaHtml += `<audio controls src="${item.audio_url}" class="mt-2" style="max-width: 320px; display: block;"></audio>`;
+
+            const displayContent = item.question_content || (parseInt(item.part) === 2 ? 'Mark your answer on your answer sheet.' : '');
+            const contentHtml = displayContent || (mediaHtml ? '' : '<i style="color:#94a3b8;">Nội dung không khả dụng.</i>');
+            
+            // tạo các lựa chọn A, B, C, D kèm nội dung chi tiết
             const numOptions = (item.question_number >= 7 && item.question_number <= 31) ? 3 : 4;
             const optionsList = ['A', 'B', 'C', 'D'].slice(0, numOptions);
             let optionsHtml = '';
             
             optionsList.forEach(opt => {
                 let textClass = 'ans-text';
+                let isSystemHighlight = false;
                 
                 if (opt === item.correct_option) {
                     textClass += ' fw-bold text-success';
+                    isSystemHighlight = true;
                 } else if (opt === item.user_choice && opt !== item.correct_option) {
                     textClass += ' fw-bold text-danger';
+                    isSystemHighlight = true;
                 }
                 
-                const optText = (item.options && item.options[opt]) ? item.options[opt] : '';
-                const displayOptText = optText ? `<span class="fw-bold me-2">${opt}.</span> ${optText}` : `<span class="fw-bold">${opt}.</span>`;
+                const optText = (item.options && item.options[opt]) ? item.options[opt].trim() : '';
+                const translation = (item.option_translations && item.option_translations[opt]) ? item.option_translations[opt].trim() : '';
+                const isPlaceholder = optText === '' || 
+                                    optText.toUpperCase() === opt.toUpperCase() || 
+                                    optText.toUpperCase() === `(${opt.toUpperCase()})`;
+                const displayContent = isPlaceholder ? '' : ' ' + optText;
+                
+                let displayOptText = `<span class="fw-bold me-2">(${opt})</span>${displayContent}`;
+                if (translation) {
+                    const arrowClass = isSystemHighlight ? '' : 'text-secondary';
+                    const transClass = isSystemHighlight ? '' : 'text-muted';
+                    displayOptText += ` <span class="${arrowClass} mx-1">→</span> <span class="option-translation ${transClass}" style="font-style: italic;">${translation}</span>`;
+                }
 
                 optionsHtml += `
                 <div class="mb-2">
                     <div class="${textClass}">${displayOptText}</div>
                 </div>`;
             });
+
+            let explanationHtml = '';
+            if (item.explanation && item.explanation.trim()) {
+                explanationHtml = `
+                <div class="explanation-box mt-3 p-3 rounded" style="font-size: 0.9rem; background-color: #f8fafc; border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);">
+                    <strong style="color: #2563eb; display: block; margin-bottom: 4px;"><i class="bx bx-info-circle me-1"></i>Giải thích:</strong>
+                    <div style="color: #4b5563; line-height: 1.5;">${item.explanation.trim()}</div>
+                </div>`;
+            }
 
             html += `
             <div class="question-item" id="question-target-${item.question_number}" data-correct="${ok ? '1' : ''}">
@@ -121,8 +227,10 @@ function renderReviewList(questions) {
                 <div class="options-list mt-3">
                     ${optionsHtml}
                 </div>
+                ${explanationHtml}
             </div>`;
         });
+        html += '</div>';
     });
 
     $('#wrong-questions-list').html(html);

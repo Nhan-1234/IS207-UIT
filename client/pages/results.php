@@ -11,7 +11,7 @@ $navbarMode = 'light';
 	<?php include './components/metadata.php'; ?>
 	<title>Kết quả bài thi | Prephub</title>
 	<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="../styles/results.css">
+	<link rel="stylesheet" href="../styles/results.css?v=<?= time() ?>">
 </head>
 
 <body>
@@ -109,7 +109,7 @@ $navbarMode = 'light';
 	</div>
 
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script src="../js/results.js"></script>
+	<script src="../js/results.js?v=<?= time() ?>"></script>
 </body>
 
 </html>
