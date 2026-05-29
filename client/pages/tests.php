@@ -22,8 +22,10 @@ require_once '../../server/middleware/auth.php';
     <?php include './components/navbar.php'; ?>
     <div class="page">
         <div class="hero">
-            <h1>Danh sách đề thi</h1>
-            <p>Luyện thi TOEIC với bộ đề đa dạng</p>
+            <div class="container-fluid">
+                <h1>Danh sách đề thi</h1>
+                <p>Luyện thi TOEIC với bộ đề đa dạng</p>
+            </div>
         </div>
         <div class="content">
             <!-- Thanh filter được gắn ở trên -->
@@ -50,13 +52,13 @@ require_once '../../server/middleware/auth.php';
                     </select>
                 </div>
             </div>
-            <div class="section-label">Miễn phí</div>
+            <div class="section-label">Đề thi kiểm tra năng lực</div>
             <!-- Lưới hiển thị đề thi -->
             <div class="test-grid grid-free">
                 <!-- Ô đề thi FREE------------------------------------------------------>
 
             </div>
-            <div class="section-label">Premium</div>
+            <div class="section-label">Đề thi ôn cấp tốc TOEIC 2026</div>
             <!-- Lưới hiển thị đề thi -->
             <div class="test-grid grid-premium">
                 <!-- Ô đề thi PREMIUM------------------------------------------------------>
