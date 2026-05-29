@@ -1,8 +1,9 @@
 <?php
 //Kiểm tra xem user có đăng nhập hay chưa
 //Tránh việc lên URL gõ tests.php là ra trang này
+session_start();
 require_once '../../server/middleware/auth.php';
-homeRedirect();
+//homeRedirect();
 ?>
 
 <!DOCTYPE html>
@@ -53,7 +54,7 @@ homeRedirect();
             <!-- Lưới hiển thị đề thi -->
             <div class="test-grid grid-free">
                 <!-- Ô đề thi FREE------------------------------------------------------>
-                
+
             </div>
             <div class="section-label">Premium</div>
             <!-- Lưới hiển thị đề thi -->
@@ -66,7 +67,9 @@ homeRedirect();
 
     <!-- INCLUDE FOOTER FILE -->
     <?php include './components/footer.php'; ?>
-
+    <script>
+        window.isUserLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+    </script>
     <script src="../js/tests.js"></script>
 </body>
 
