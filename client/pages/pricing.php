@@ -775,7 +775,7 @@ $userTier = $planTier[$currentPlan] ?? 0;
 			</div>
 
 			<div class="bottom-action">
-				<a href="user.php" class="accent-btn" aria-label="Quay về trang chủ"></a>
+				<a href="home.php" class="accent-btn" aria-label="Quay về trang chủ"></a>
 			</div>
 		</div>
 	</section>
