@@ -259,3 +259,79 @@ html, body { height: 100%; overflow: hidden; background: #f8fafc; }
     width: 100%;
 }
 .btn-home:hover { background: #0e2050; color: white; }
+
+img {
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.passage-group-header.no-image {
+	margin-bottom: 5px !important;
+}
+
+/* bố cục lưới cho phần xem lại câu hỏi */
+.review-questions-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px 30px;
+}
+
+.review-questions-grid .question-item {
+	border-bottom: none;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.passage-group-header {
+	grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+	.review-questions-grid {
+		grid-template-columns: 1fr;
+	}
+	.passage-group-header {
+		grid-column: span 1;
+	}
+}
+
+/* styling for the passage display box */
+.passage-text-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 0;
+	padding: 24px;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+	margin-bottom: 20px;
+	color: #334155;
+	font-size: 0.95rem;
+	line-height: 1.6;
+}
+
+.passage-text-card p {
+	margin-bottom: 12px;
+}
+
+.passage-text-card p:last-child {
+	margin-bottom: 0;
+}
+
+.passage-text-card h3 {
+	font-size: 1.1rem;
+	font-weight: 700;
+	margin-bottom: 12px;
+	color: #1e293b;
+}
+
+.passage-text-card table {
+	width: 100% !important;
+	border-collapse: collapse;
+	margin: 15px 0;
+}
+
+.passage-text-card table td, .passage-text-card table th {
+	border: 1px solid #cbd5e1;
+	padding: 8px 12px;
+}

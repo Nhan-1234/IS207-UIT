@@ -22,7 +22,6 @@ function calculateToeicScore($correct)
  */
 function getReviewDetails($conn, $attempt_id)
 {
-	// Lấy danh sách câu hỏi và đáp án của user
 	$sqlQuestions = "
         SELECT 
             q.id AS question_id, 
@@ -32,15 +31,22 @@ function getReviewDetails($conn, $attempt_id)
             q.image_url, 
             q.audio_url, 
             q.correct_answer AS correct_option,
-            ua.selected_answer AS user_choice
+            q.explanation,
+            ua.selected_answer AS user_choice,
+            p.content AS paragraph,
+            p.image_url AS passage_image,
+            p.audio_url AS passage_audio,
+            p.translation AS passage_translation,
+            p.translation_en AS passage_translation_en
         FROM questions q
+        LEFT JOIN passages p ON q.passage_id = p.id
         JOIN attempts a ON (a.id = :id OR a.uuid = :uuid) AND q.test_id = a.test_id
         LEFT JOIN attempt_answers ua ON q.id = ua.question_id AND ua.attempt_id = a.id
         ORDER BY q.part ASC, q.question_number ASC
     ";
 
 	$stmtQ = $conn->prepare($sqlQuestions);
-	// Hỗ trợ cả ID số và UUID
+	// hỗ trợ cả ID số và UUID
 	$stmtQ->execute(['id' => is_numeric($attempt_id) ? $attempt_id : 0, 'uuid' => $attempt_id]);
 	$questions = $stmtQ->fetchAll(PDO::FETCH_ASSOC);
 
@@ -50,20 +56,23 @@ function getReviewDetails($conn, $attempt_id)
 	$questionIds = array_column($questions, 'question_id');
 	$placeholders = implode(',', array_fill(0, count($questionIds), '?'));
 
-	$sqlOptions = "SELECT question_id, label, content FROM options WHERE question_id IN ($placeholders) ORDER BY label ASC";
+	$sqlOptions = "SELECT question_id, label, content, translation FROM options WHERE question_id IN ($placeholders) ORDER BY label ASC";
 	$stmtO = $conn->prepare($sqlOptions);
 	$stmtO->execute($questionIds);
 	$optionsRaw = $stmtO->fetchAll(PDO::FETCH_ASSOC);
 
 	$groupedOptions = [];
-	// Gom tất cả lựa chọn (A, B, C, D) vào một mảng theo ID câu hỏi để tra cứu đáp án theo ID câu hỏi cho nhanh
+	$groupedTranslations = [];
+	// gom tất cả lựa chọn (A, B, C, D) và bản dịch vào mảng theo ID câu hỏi
 	foreach ($optionsRaw as $opt) {
 		$groupedOptions[$opt['question_id']][$opt['label']] = $opt['content'];
+		$groupedTranslations[$opt['question_id']][$opt['label']] = $opt['translation'];
 	}
 
-	// gán ngược các đáp án đó vào từng câu hỏi để trả về cho Frontend
+	// gán ngược các đáp án đó vào từng câu hỏi để trả về cho frontend
 	foreach ($questions as &$q) {
 		$q['options'] = $groupedOptions[$q['question_id']] ?? [];
+		$q['option_translations'] = $groupedTranslations[$q['question_id']] ?? [];
 	}
 
 	return $questions;
@@ -85,16 +94,27 @@ function submitAndGrade($conn, $user_id, $test_uuid, $user_answers, $time_spent)
 			return false;
 		$test_id = $test['id'];
 
-		// 2. Lấy đáp án chuẩn
+		// lấy đáp án chuẩn từ database
 		$stmt = $conn->prepare("SELECT id, correct_answer, part FROM questions WHERE test_id = ?");
 		$stmt->execute([$test_id]);
 		$correct_answers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		// đếm tổng số câu listening và reading trong đề thi
+		$total_l = 0;
+		$total_r = 0;
+		foreach ($correct_answers as $row) {
+			if ((int)$row['part'] <= 4) {
+				$total_l++;
+			} else {
+				$total_r++;
+			}
+		}
 
 		$l_correct = 0;
 		$r_correct = 0;
 		$details_data = [];
 
-		// 3. Chấm điểm dựa trên Question ID (Không dùng số thứ tự câu)
+		// chấm điểm dựa trên question id (không dùng số thứ tự câu)
 		foreach ($correct_answers as $row) {
 			$qId = $row['id'];
 			$correct = $row['correct_answer'];
@@ -117,9 +137,21 @@ function submitAndGrade($conn, $user_id, $test_uuid, $user_answers, $time_spent)
 			];
 		}
 
-		// 4. Quy đổi điểm
-		$l_score = calculateToeicScore($l_correct);
-		$r_score = calculateToeicScore($r_correct);
+		// quy đổi điểm
+		if ($total_l > 0) {
+			$scaled_l = (int)round(($l_correct / $total_l) * 100);
+			$l_score = calculateToeicScore($scaled_l);
+		} else {
+			$l_score = 0;
+		}
+
+		if ($total_r > 0) {
+			$scaled_r = (int)round(($r_correct / $total_r) * 100);
+			$r_score = calculateToeicScore($scaled_r);
+		} else {
+			$r_score = 0;
+		}
+
 		$total_score = $l_score + $r_score;
 
 		// 5. Lưu vào attempts
