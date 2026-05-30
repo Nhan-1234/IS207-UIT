@@ -53,6 +53,9 @@
 .content {
 	padding: 2rem 3rem;
 	width: 100%;
+	padding-left: 100px; 
+    padding-right: 100px;
+	box-sizing: border-box;
 }
 .toolbar {
 	display: flex;
