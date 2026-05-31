@@ -9,7 +9,6 @@ truncate table `attempt_answers`;
 truncate table `attempts`;
 truncate table `questions`;
 truncate table `passages`;
-truncate table `payments`;
 truncate table `tests`;
 truncate table `oauth_accounts`;
 truncate table `users`;
@@ -17,8 +16,6 @@ truncate table `users`;
 insert into `users` (`id`, `uuid`, `last_name`, `first_name`, `email`, `password`, `role`) values
 (1, 'd3b07384-d990-4495-92b8-508381286699', 'Admin', 'Sáng Lập', 'admin@prephub.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
 (2, '8d89163d-42ba-4b68-80f0-3330b62e4975', 'Nguyễn', 'Văn A', 'user@prephub.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user');
-
-insert into `payments` (`user_id`, `test_id`) values (2, 24);
 
 insert into `tests` (`id`, `uuid`, `title`, `description`, `duration`, `audio_url`, `total_questions`, `is_premium`, `is_active`) values
 (24, '7d06dcdb-5aaf-11f1-b13b-52cb7e509645', 'Đề thi thử TOEIC: Mã đề FEVER | Thi thử TOEIC Online', null, 7200, '/server/uploads/audio/main_rGK2OwYGZ3.mp3', 200, 0, 1);
